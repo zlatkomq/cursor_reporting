@@ -24,6 +24,10 @@ _TEMPLATES_DIR = Path(__file__).resolve().parent.parent / "templates"
 templates = Jinja2Templates(directory=str(_TEMPLATES_DIR))
 
 
+def _is_htmx(request: Request) -> bool:
+    return request.headers.get("HX-Request") == "true"
+
+
 def _build_metrics_service(session: AsyncSession) -> MetricsService:
     return MetricsService(
         repository=MetricsRepository(session),
@@ -45,17 +49,16 @@ async def dashboard_overview(
     daily_dates = [entry["date"] for entry in overview["daily_counts"]]
     daily_counts = [entry["count"] for entry in overview["daily_counts"]]
 
-    return templates.TemplateResponse(
-        request,
-        "dashboard.html",
-        context={
-            "current_user": current_user,
-            "overview": overview,
-            "current_days": days,
-            "daily_dates": daily_dates,
-            "daily_counts": daily_counts,
-        },
-    )
+    context = {
+        "current_user": current_user,
+        "overview": overview,
+        "current_days": days,
+        "daily_dates": daily_dates,
+        "daily_counts": daily_counts,
+    }
+
+    template = "partials/dashboard_content.html" if _is_htmx(request) else "dashboard.html"
+    return templates.TemplateResponse(request, template, context=context)
 
 
 @router.get("/dashboard/by-model", response_class=HTMLResponse)
@@ -69,17 +72,16 @@ async def dashboard_by_model(
     service = _build_metrics_service(session)
     data = await service.get_by_model(days)
 
-    return templates.TemplateResponse(
-        request,
-        "by_model.html",
-        context={
-            "current_user": current_user,
-            "data": data,
-            "models": data["models"],
-            "current_days": days,
-            "filter_url": "/dashboard/by-model",
-        },
-    )
+    context = {
+        "current_user": current_user,
+        "data": data,
+        "models": data["models"],
+        "current_days": days,
+        "filter_url": "/dashboard/by-model",
+    }
+
+    template = "partials/by_model_content.html" if _is_htmx(request) else "by_model.html"
+    return templates.TemplateResponse(request, template, context=context)
 
 
 @router.get("/dashboard/by-developer", response_class=HTMLResponse)
@@ -93,13 +95,12 @@ async def by_developer_page(
     service = _build_metrics_service(session)
     data = await service.get_by_developer(days=days)
 
-    return templates.TemplateResponse(
-        request,
-        "by_developer.html",
-        context={
-            "current_user": current_user,
-            "developers": data["developers"],
-            "current_days": data["period_days"],
-            "filter_url": "/dashboard/by-developer",
-        },
-    )
+    context = {
+        "current_user": current_user,
+        "developers": data["developers"],
+        "current_days": data["period_days"],
+        "filter_url": "/dashboard/by-developer",
+    }
+
+    template = "partials/by_developer_content.html" if _is_htmx(request) else "by_developer.html"
+    return templates.TemplateResponse(request, template, context=context)

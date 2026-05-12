@@ -4,17 +4,20 @@
         hx-get="{{ filter_url | default('/dashboard') }}?days=7"
         hx-target="#dashboard-content"
         hx-swap="innerHTML"
+        hx-push-url="{{ filter_url | default('/dashboard') }}?days=7"
     >7d</button>
     <button
         class="btn{% if current_days == 30 %} active{% endif %}"
         hx-get="{{ filter_url | default('/dashboard') }}?days=30"
         hx-target="#dashboard-content"
         hx-swap="innerHTML"
+        hx-push-url="{{ filter_url | default('/dashboard') }}?days=30"
     >30d</button>
     <button
         class="btn{% if current_days == 90 %} active{% endif %}"
         hx-get="{{ filter_url | default('/dashboard') }}?days=90"
         hx-target="#dashboard-content"
         hx-swap="innerHTML"
+        hx-push-url="{{ filter_url | default('/dashboard') }}?days=90"
     >90d</button>
 </div>

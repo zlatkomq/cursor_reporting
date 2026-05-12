@@ -355,3 +355,193 @@ class TestByModelUnauthenticated:
 
         assert resp.status_code == 303
         assert resp.headers["location"] == "/dashboard/login"
+
+
+class TestHTMXDateFilter:
+    """HTMX requests return partial content without the full HTML wrapper."""
+
+    @pytest.mark.asyncio()
+    async def test_htmx_overview_returns_partial(self, client: AsyncClient) -> None:
+        from cursor_metrics.dependencies import get_current_user
+        from cursor_metrics.main import app
+
+        app.dependency_overrides[get_current_user] = lambda: "user@example.com"
+
+        with patch("cursor_metrics.routers.dashboard._build_metrics_service") as mock_build:
+            mock_svc = AsyncMock()
+            mock_svc.get_overview = AsyncMock(return_value=_MOCK_OVERVIEW)
+            mock_build.return_value = mock_svc
+
+            resp = await client.get(
+                "/dashboard?days=7",
+                headers={"HX-Request": "true"},
+            )
+
+        assert resp.status_code == 200
+        html = resp.text
+        assert "<!DOCTYPE html>" not in html
+        assert "<html" not in html
+        assert "stat-card" in html
+        assert "dailyChart" in html
+
+    @pytest.mark.asyncio()
+    async def test_htmx_by_developer_returns_partial(self, client: AsyncClient) -> None:
+        from cursor_metrics.dependencies import get_current_user
+        from cursor_metrics.main import app
+
+        app.dependency_overrides[get_current_user] = lambda: "admin@test.com"
+
+        mock_data = {
+            "period_days": 7,
+            "developers": [
+                {
+                    "email": "dev@company.com",
+                    "event_count": 200,
+                    "top_model": "claude-4-opus",
+                    "avg_duration_ms": 25000,
+                    "last_active": "2026-05-10T14:00:00",
+                },
+            ],
+        }
+
+        with patch("cursor_metrics.routers.dashboard._build_metrics_service") as mock_build:
+            mock_svc = AsyncMock()
+            mock_svc.get_by_developer = AsyncMock(return_value=mock_data)
+            mock_build.return_value = mock_svc
+
+            resp = await client.get(
+                "/dashboard/by-developer?days=7",
+                headers={"HX-Request": "true"},
+            )
+
+        assert resp.status_code == 200
+        html = resp.text
+        assert "<!DOCTYPE html>" not in html
+        assert "dev@company.com" in html
+        assert "<table" in html
+
+    @pytest.mark.asyncio()
+    async def test_htmx_by_model_returns_partial(self, client: AsyncClient) -> None:
+        from cursor_metrics.dependencies import get_current_user
+        from cursor_metrics.main import app
+
+        app.dependency_overrides[get_current_user] = lambda: "admin@test.com"
+
+        mock_data = {
+            "period_days": 7,
+            "models": [
+                {
+                    "model": "gpt-4o",
+                    "event_count": 3100,
+                    "developer_count": 10,
+                    "estimated_cost_usd": 95.50,
+                    "avg_duration_ms": 22000,
+                },
+            ],
+        }
+
+        with patch("cursor_metrics.routers.dashboard._build_metrics_service") as mock_build:
+            mock_svc = AsyncMock()
+            mock_svc.get_by_model = AsyncMock(return_value=mock_data)
+            mock_build.return_value = mock_svc
+
+            resp = await client.get(
+                "/dashboard/by-model?days=7",
+                headers={"HX-Request": "true"},
+            )
+
+        assert resp.status_code == 200
+        html = resp.text
+        assert "<!DOCTYPE html>" not in html
+        assert "gpt-4o" in html
+        assert "$95.50" in html
+
+
+class TestHTMXDateFilterDays:
+    """HTMX requests with different days values pass correct param to service."""
+
+    @pytest.mark.asyncio()
+    async def test_htmx_overview_days_7(self, client: AsyncClient) -> None:
+        from cursor_metrics.dependencies import get_current_user
+        from cursor_metrics.main import app
+
+        app.dependency_overrides[get_current_user] = lambda: "user@example.com"
+
+        with patch("cursor_metrics.routers.dashboard._build_metrics_service") as mock_build:
+            mock_svc = AsyncMock()
+            mock_svc.get_overview = AsyncMock(return_value=_MOCK_OVERVIEW)
+            mock_build.return_value = mock_svc
+
+            await client.get(
+                "/dashboard?days=7",
+                headers={"HX-Request": "true"},
+            )
+
+        mock_svc.get_overview.assert_called_once_with(7)
+
+    @pytest.mark.asyncio()
+    async def test_htmx_overview_days_90(self, client: AsyncClient) -> None:
+        from cursor_metrics.dependencies import get_current_user
+        from cursor_metrics.main import app
+
+        app.dependency_overrides[get_current_user] = lambda: "user@example.com"
+
+        with patch("cursor_metrics.routers.dashboard._build_metrics_service") as mock_build:
+            mock_svc = AsyncMock()
+            mock_svc.get_overview = AsyncMock(return_value=_MOCK_OVERVIEW)
+            mock_build.return_value = mock_svc
+
+            await client.get(
+                "/dashboard?days=90",
+                headers={"HX-Request": "true"},
+            )
+
+        mock_svc.get_overview.assert_called_once_with(90)
+
+    @pytest.mark.asyncio()
+    async def test_htmx_by_developer_days_90(self, client: AsyncClient) -> None:
+        from cursor_metrics.dependencies import get_current_user
+        from cursor_metrics.main import app
+
+        app.dependency_overrides[get_current_user] = lambda: "admin@test.com"
+
+        mock_data = {
+            "period_days": 90,
+            "developers": [],
+        }
+
+        with patch("cursor_metrics.routers.dashboard._build_metrics_service") as mock_build:
+            mock_svc = AsyncMock()
+            mock_svc.get_by_developer = AsyncMock(return_value=mock_data)
+            mock_build.return_value = mock_svc
+
+            await client.get(
+                "/dashboard/by-developer?days=90",
+                headers={"HX-Request": "true"},
+            )
+
+        mock_svc.get_by_developer.assert_called_once_with(days=90)
+
+    @pytest.mark.asyncio()
+    async def test_htmx_by_model_days_7(self, client: AsyncClient) -> None:
+        from cursor_metrics.dependencies import get_current_user
+        from cursor_metrics.main import app
+
+        app.dependency_overrides[get_current_user] = lambda: "admin@test.com"
+
+        mock_data = {
+            "period_days": 7,
+            "models": [],
+        }
+
+        with patch("cursor_metrics.routers.dashboard._build_metrics_service") as mock_build:
+            mock_svc = AsyncMock()
+            mock_svc.get_by_model = AsyncMock(return_value=mock_data)
+            mock_build.return_value = mock_svc
+
+            await client.get(
+                "/dashboard/by-model?days=7",
+                headers={"HX-Request": "true"},
+            )
+
+        mock_svc.get_by_model.assert_called_once_with(7)
