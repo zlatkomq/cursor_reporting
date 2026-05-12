@@ -8,7 +8,7 @@ WORKDIR /app
 COPY pyproject.toml uv.lock* ./
 
 RUN uv venv /app/.venv && \
-    uv sync --no-dev --frozen 2>/dev/null || uv sync --no-dev
+    uv sync --no-dev --frozen
 
 # ---- Runtime stage: slim production image ----
 FROM python:3.12-slim AS runtime
@@ -23,9 +23,9 @@ COPY --from=build /app/.venv /app/.venv
 COPY src/ src/
 COPY alembic/ alembic/
 COPY alembic.ini .
-COPY src/cursor_metrics/templates/ src/cursor_metrics/templates/
 
 ENV PATH="/app/.venv/bin:$PATH" \
+    PYTHONPATH="/app/src" \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
@@ -33,4 +33,4 @@ EXPOSE 8000
 
 USER appuser
 
-ENTRYPOINT ["uvicorn", "src.cursor_metrics.main:app", "--host", "0.0.0.0", "--port", "8000"]
+ENTRYPOINT ["uvicorn", "cursor_metrics.main:app", "--host", "0.0.0.0", "--port", "8000"]

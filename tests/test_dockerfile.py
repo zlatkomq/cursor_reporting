@@ -35,7 +35,7 @@ class TestDockerfile:
     def test_uvicorn_entrypoint(self, content: str) -> None:
         lower = content.lower()
         assert "uvicorn" in lower, "Dockerfile must reference uvicorn in CMD or ENTRYPOINT"
-        assert "src.cursor_metrics.main:app" in content, "Dockerfile must use correct app entrypoint"
+        assert "cursor_metrics.main:app" in content, "Dockerfile must use correct app entrypoint"
 
     def test_non_root_user(self, content: str) -> None:
         lower = content.lower()
