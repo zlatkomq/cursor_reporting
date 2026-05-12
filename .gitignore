@@ -2,3 +2,5 @@
 .framework/
 skills/
 .worktrees/
+__pycache__/
+*.pyc
