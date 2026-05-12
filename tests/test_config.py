@@ -2,21 +2,32 @@
 
 from __future__ import annotations
 
+from typing import Generator
+
 import pytest
 from pydantic import ValidationError
+from pydantic_settings import BaseSettings
 
 
 class TestSettings:
     """Verify Settings fields, types, and defaults."""
 
     @pytest.fixture(autouse=True)
-    def _required_env(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def _required_env(self, monkeypatch: pytest.MonkeyPatch) -> Generator[None]:
         """Provide required env vars so Settings can instantiate."""
+        from cursor_metrics.config import get_settings
+
+        get_settings.cache_clear()
         monkeypatch.setenv("DATABASE_URL", "mysql+aiomysql://u:p@localhost:3306/test")
         monkeypatch.setenv("SECRET_KEY", "test-secret-key-abc123")
+        yield
+        get_settings.cache_clear()
 
     def test_import(self) -> None:
-        from cursor_metrics.config import Settings, get_settings  # noqa: F401
+        from cursor_metrics.config import Settings, get_settings
+
+        assert issubclass(Settings, BaseSettings)
+        assert callable(get_settings)
 
     def test_database_url_from_env(self) -> None:
         from cursor_metrics.config import Settings
@@ -82,9 +93,14 @@ class TestGetSettings:
     """Verify get_settings() returns a cached Settings instance."""
 
     @pytest.fixture(autouse=True)
-    def _required_env(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def _required_env(self, monkeypatch: pytest.MonkeyPatch) -> Generator[None]:
+        from cursor_metrics.config import get_settings
+
+        get_settings.cache_clear()
         monkeypatch.setenv("DATABASE_URL", "mysql+aiomysql://u:p@localhost:3306/test")
         monkeypatch.setenv("SECRET_KEY", "test-secret-key-abc123")
+        yield
+        get_settings.cache_clear()
 
     def test_returns_settings_instance(self) -> None:
         from cursor_metrics.config import Settings, get_settings
