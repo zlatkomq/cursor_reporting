@@ -7,11 +7,11 @@ from typing import TYPE_CHECKING
 import pytest
 
 if TYPE_CHECKING:
-    from collections.abc import Generator
+    from collections.abc import Iterator
 
 
 @pytest.fixture(autouse=True)
-def _required_env(monkeypatch: pytest.MonkeyPatch) -> Generator[None]:
+def _required_env(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     from cursor_metrics.config import get_settings
 
     get_settings.cache_clear()

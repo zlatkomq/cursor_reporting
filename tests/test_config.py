@@ -2,26 +2,30 @@
 
 from __future__ import annotations
 
-from typing import Generator
+from typing import TYPE_CHECKING
 
 import pytest
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 from pydantic import ValidationError
 from pydantic_settings import BaseSettings
 
 
+@pytest.fixture(autouse=True)
+def _required_env(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    """Provide required env vars so Settings can instantiate."""
+    from cursor_metrics.config import get_settings
+
+    get_settings.cache_clear()
+    monkeypatch.setenv("DATABASE_URL", "mysql+aiomysql://u:p@localhost:3306/test")
+    monkeypatch.setenv("SECRET_KEY", "test-secret-key-abc123")
+    yield
+    get_settings.cache_clear()
+
+
 class TestSettings:
     """Verify Settings fields, types, and defaults."""
-
-    @pytest.fixture(autouse=True)
-    def _required_env(self, monkeypatch: pytest.MonkeyPatch) -> Generator[None]:
-        """Provide required env vars so Settings can instantiate."""
-        from cursor_metrics.config import get_settings
-
-        get_settings.cache_clear()
-        monkeypatch.setenv("DATABASE_URL", "mysql+aiomysql://u:p@localhost:3306/test")
-        monkeypatch.setenv("SECRET_KEY", "test-secret-key-abc123")
-        yield
-        get_settings.cache_clear()
 
     def test_import(self) -> None:
         from cursor_metrics.config import Settings, get_settings
@@ -91,16 +95,6 @@ class TestSettings:
 
 class TestGetSettings:
     """Verify get_settings() returns a cached Settings instance."""
-
-    @pytest.fixture(autouse=True)
-    def _required_env(self, monkeypatch: pytest.MonkeyPatch) -> Generator[None]:
-        from cursor_metrics.config import get_settings
-
-        get_settings.cache_clear()
-        monkeypatch.setenv("DATABASE_URL", "mysql+aiomysql://u:p@localhost:3306/test")
-        monkeypatch.setenv("SECRET_KEY", "test-secret-key-abc123")
-        yield
-        get_settings.cache_clear()
 
     def test_returns_settings_instance(self) -> None:
         from cursor_metrics.config import Settings, get_settings

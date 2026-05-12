@@ -4,16 +4,16 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from collections.abc import Generator
-
 import pytest
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 from sqlalchemy import DateTime, Integer, Numeric, String
 from sqlalchemy.orm import DeclarativeBase
 
 
 @pytest.fixture(autouse=True)
-def _required_env(monkeypatch: pytest.MonkeyPatch) -> Generator[None]:
+def _required_env(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     from cursor_metrics.config import get_settings
 
     get_settings.cache_clear()

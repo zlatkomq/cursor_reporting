@@ -7,25 +7,26 @@ from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, patch
 
 if TYPE_CHECKING:
-    from collections.abc import Generator
+    from collections.abc import Iterator
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase
 
 
+@pytest.fixture(autouse=True)
+def _required_env(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    from cursor_metrics.config import get_settings
+
+    get_settings.cache_clear()
+    monkeypatch.setenv("DATABASE_URL", "mysql+aiomysql://u:p@localhost:3306/test")
+    monkeypatch.setenv("SECRET_KEY", "test-secret-key-abc123")
+    yield
+    get_settings.cache_clear()
+
+
 class TestBase:
     """Verify Base is a proper DeclarativeBase subclass."""
-
-    @pytest.fixture(autouse=True)
-    def _required_env(self, monkeypatch: pytest.MonkeyPatch) -> Generator[None]:
-        from cursor_metrics.config import get_settings
-
-        get_settings.cache_clear()
-        monkeypatch.setenv("DATABASE_URL", "mysql+aiomysql://u:p@localhost:3306/test")
-        monkeypatch.setenv("SECRET_KEY", "test-secret-key-abc123")
-        yield
-        get_settings.cache_clear()
 
     def test_base_is_declarative_base_subclass(self) -> None:
         from cursor_metrics.database import Base
@@ -35,16 +36,6 @@ class TestBase:
 
 class TestAsyncEngine:
     """Verify async_engine is created from Settings.DATABASE_URL."""
-
-    @pytest.fixture(autouse=True)
-    def _required_env(self, monkeypatch: pytest.MonkeyPatch) -> Generator[None]:
-        from cursor_metrics.config import get_settings
-
-        get_settings.cache_clear()
-        monkeypatch.setenv("DATABASE_URL", "mysql+aiomysql://u:p@localhost:3306/test")
-        monkeypatch.setenv("SECRET_KEY", "test-secret-key-abc123")
-        yield
-        get_settings.cache_clear()
 
     def test_async_engine_is_async_engine_instance(self) -> None:
         from cursor_metrics.database import async_engine
@@ -70,16 +61,6 @@ class TestAsyncEngine:
 class TestAsyncSessionLocal:
     """Verify AsyncSessionLocal is an async_sessionmaker bound to the engine."""
 
-    @pytest.fixture(autouse=True)
-    def _required_env(self, monkeypatch: pytest.MonkeyPatch) -> Generator[None]:
-        from cursor_metrics.config import get_settings
-
-        get_settings.cache_clear()
-        monkeypatch.setenv("DATABASE_URL", "mysql+aiomysql://u:p@localhost:3306/test")
-        monkeypatch.setenv("SECRET_KEY", "test-secret-key-abc123")
-        yield
-        get_settings.cache_clear()
-
     def test_async_session_local_is_async_sessionmaker(self) -> None:
         from cursor_metrics.database import AsyncSessionLocal
 
@@ -98,16 +79,6 @@ class TestAsyncSessionLocal:
 
 class TestGetDb:
     """Verify get_db() is an async generator yielding AsyncSession."""
-
-    @pytest.fixture(autouse=True)
-    def _required_env(self, monkeypatch: pytest.MonkeyPatch) -> Generator[None]:
-        from cursor_metrics.config import get_settings
-
-        get_settings.cache_clear()
-        monkeypatch.setenv("DATABASE_URL", "mysql+aiomysql://u:p@localhost:3306/test")
-        monkeypatch.setenv("SECRET_KEY", "test-secret-key-abc123")
-        yield
-        get_settings.cache_clear()
 
     def test_get_db_is_async_generator_function(self) -> None:
         from cursor_metrics.database import get_db
