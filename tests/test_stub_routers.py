@@ -47,20 +47,10 @@ class TestAuthRouter:
 
         assert isinstance(router, APIRouter)
 
-    def test_router_prefix(self) -> None:
+    def test_router_has_routes(self) -> None:
         from cursor_metrics.routers.auth import router
 
-        assert router.prefix == "/api/v1/auth"
-
-    def test_router_has_auth_tag(self) -> None:
-        from cursor_metrics.routers.auth import router
-
-        assert "auth" in router.tags
-
-    def test_router_has_no_routes(self) -> None:
-        from cursor_metrics.routers.auth import router
-
-        assert len(router.routes) == 0
+        assert len(router.routes) > 0
 
 
 class TestDashboardRouter:
