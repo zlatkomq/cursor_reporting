@@ -20,6 +20,7 @@ def _required_env(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     get_settings.cache_clear()
     monkeypatch.setenv("DATABASE_URL", "mysql+aiomysql://u:p@localhost:3306/test")
     monkeypatch.setenv("SECRET_KEY", "test-secret-key-abc123")
+    monkeypatch.setenv("JWT_SECRET_KEY", "test-jwt-secret-key")
     yield
     get_settings.cache_clear()
 
@@ -83,14 +84,40 @@ class TestSettings:
 
         monkeypatch.delenv("DATABASE_URL")
         with pytest.raises(ValidationError):
-            Settings()
+            Settings(_env_file=None)
 
     def test_secret_key_required(self, monkeypatch: pytest.MonkeyPatch) -> None:
         from cursor_metrics.config import Settings
 
         monkeypatch.delenv("SECRET_KEY")
         with pytest.raises(ValidationError):
-            Settings()
+            Settings(_env_file=None)
+
+    def test_jwt_secret_key_from_env(self) -> None:
+        from cursor_metrics.config import Settings
+
+        settings = Settings()
+        assert settings.JWT_SECRET_KEY == "test-jwt-secret-key"
+
+    def test_jwt_secret_key_required(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        from cursor_metrics.config import Settings
+
+        monkeypatch.delenv("JWT_SECRET_KEY")
+        with pytest.raises(ValidationError):
+            Settings(_env_file=None)
+
+    def test_jwt_expire_minutes_default(self) -> None:
+        from cursor_metrics.config import Settings
+
+        settings = Settings()
+        assert settings.JWT_EXPIRE_MINUTES == 1440
+
+    def test_jwt_expire_minutes_override(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        from cursor_metrics.config import Settings
+
+        monkeypatch.setenv("JWT_EXPIRE_MINUTES", "60")
+        settings = Settings()
+        assert settings.JWT_EXPIRE_MINUTES == 60
 
 
 class TestGetSettings:

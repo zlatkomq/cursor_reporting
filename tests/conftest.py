@@ -20,6 +20,7 @@ def _required_env(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     get_settings.cache_clear()
     monkeypatch.setenv("DATABASE_URL", "mysql+aiomysql://u:p@localhost:3306/test")
     monkeypatch.setenv("SECRET_KEY", "test-secret-key-abc123")
+    monkeypatch.setenv("JWT_SECRET_KEY", "test-jwt-secret-key")
     yield
     get_settings.cache_clear()
 
