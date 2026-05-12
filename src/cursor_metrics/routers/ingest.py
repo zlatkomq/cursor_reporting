@@ -1,7 +1,5 @@
 """Stub ingest router — accepts telemetry payloads and returns 202 Accepted."""
 
-from __future__ import annotations
-
 from fastapi import APIRouter, status
 from fastapi.responses import JSONResponse
 

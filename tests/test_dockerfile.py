@@ -28,9 +28,9 @@ class TestDockerfile:
         assert from_count >= 2, "Dockerfile must use multi-stage build (>=2 FROM statements)"
 
     def test_expose_8000(self, content: str) -> None:
-        assert any(
-            line.strip().upper().startswith("EXPOSE") and "8000" in line for line in content.splitlines()
-        ), "Dockerfile must EXPOSE 8000"
+        assert any(line.strip().upper().startswith("EXPOSE") and "8000" in line for line in content.splitlines()), (
+            "Dockerfile must EXPOSE 8000"
+        )
 
     def test_uvicorn_entrypoint(self, content: str) -> None:
         lower = content.lower()

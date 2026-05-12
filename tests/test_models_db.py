@@ -198,27 +198,21 @@ class TestMetricsEvent:
     def test_index_user_email_timestamp_columns(self) -> None:
         from cursor_metrics.models.db import MetricsEvent
 
-        idx = next(
-            i for i in MetricsEvent.__table__.indexes if i.name == "ix_metrics_events_user_email_timestamp"
-        )
+        idx = next(i for i in MetricsEvent.__table__.indexes if i.name == "ix_metrics_events_user_email_timestamp")
         col_names = [c.name for c in idx.columns]
         assert col_names == ["user_email", "timestamp"]
 
     def test_index_model_timestamp_columns(self) -> None:
         from cursor_metrics.models.db import MetricsEvent
 
-        idx = next(
-            i for i in MetricsEvent.__table__.indexes if i.name == "ix_metrics_events_model_timestamp"
-        )
+        idx = next(i for i in MetricsEvent.__table__.indexes if i.name == "ix_metrics_events_model_timestamp")
         col_names = [c.name for c in idx.columns]
         assert col_names == ["model", "timestamp"]
 
     def test_index_conversation_id_columns(self) -> None:
         from cursor_metrics.models.db import MetricsEvent
 
-        idx = next(
-            i for i in MetricsEvent.__table__.indexes if i.name == "ix_metrics_events_conversation_id"
-        )
+        idx = next(i for i in MetricsEvent.__table__.indexes if i.name == "ix_metrics_events_conversation_id")
         col_names = [c.name for c in idx.columns]
         assert col_names == ["conversation_id"]
 

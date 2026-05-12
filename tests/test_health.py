@@ -26,22 +26,18 @@ class TestHealthEndpoint:
         resp = await async_client.get("/")
         assert resp.json()["status"] == "ok"
 
-    async def test_health_version_matches_package(
-        self, async_client: AsyncClient
-    ) -> None:
+    async def test_health_version_matches_package(self, async_client: AsyncClient) -> None:
         resp = await async_client.get("/")
         assert resp.json()["version"] == cursor_metrics.__version__
 
-    async def test_health_database_connected(
-        self, async_client: AsyncClient
-    ) -> None:
+    async def test_health_database_connected(self, async_client: AsyncClient) -> None:
         resp = await async_client.get("/")
         assert resp.json()["database"] == "connected"
 
     async def test_health_database_disconnected(self) -> None:
-        from cursor_metrics.main import app
+        from httpx import ASGITransport, AsyncClient
 
-        from httpx import ASGITransport, AsyncClient as HC
+        from cursor_metrics.main import app
 
         mock_conn = AsyncMock()
         mock_conn.__aenter__ = AsyncMock(side_effect=Exception("db down"))
@@ -51,7 +47,7 @@ class TestHealthEndpoint:
 
         with patch("cursor_metrics.main.async_engine", engine):
             transport = ASGITransport(app=app)
-            async with HC(transport=transport, base_url="http://test") as client:
+            async with AsyncClient(transport=transport, base_url="http://test") as client:
                 resp = await client.get("/")
 
         assert resp.status_code == 200

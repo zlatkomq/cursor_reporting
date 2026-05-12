@@ -31,33 +31,21 @@ def payload() -> dict[str, object]:
 class TestIngestValidPayload:
     """POST /api/v1/ingest with a well-formed payload."""
 
-    async def test_valid_payload_returns_202(
-        self, async_client: AsyncClient, payload: dict[str, object]
-    ) -> None:
+    async def test_valid_payload_returns_202(self, async_client: AsyncClient, payload: dict[str, object]) -> None:
         resp = await async_client.post("/api/v1/ingest", json=payload)
         assert resp.status_code == 202
 
-    async def test_valid_payload_response_body(
-        self, async_client: AsyncClient, payload: dict[str, object]
-    ) -> None:
+    async def test_valid_payload_response_body(self, async_client: AsyncClient, payload: dict[str, object]) -> None:
         resp = await async_client.post("/api/v1/ingest", json=payload)
         assert resp.json() == {"status": "accepted"}
 
-    async def test_session_end_event_returns_202(
-        self, async_client: AsyncClient, payload: dict[str, object]
-    ) -> None:
+    async def test_session_end_event_returns_202(self, async_client: AsyncClient, payload: dict[str, object]) -> None:
         payload["event_type"] = "session_end"
         resp = await async_client.post("/api/v1/ingest", json=payload)
         assert resp.status_code == 202
 
-    async def test_minimal_payload_without_optionals_returns_202(
-        self, async_client: AsyncClient
-    ) -> None:
-        minimal = {
-            k: v
-            for k, v in VALID_PAYLOAD.items()
-            if k not in {"duration_ms", "loop_count", "cursor_version"}
-        }
+    async def test_minimal_payload_without_optionals_returns_202(self, async_client: AsyncClient) -> None:
+        minimal = {k: v for k, v in VALID_PAYLOAD.items() if k not in {"duration_ms", "loop_count", "cursor_version"}}
         resp = await async_client.post("/api/v1/ingest", json=minimal)
         assert resp.status_code == 202
 
@@ -65,23 +53,17 @@ class TestIngestValidPayload:
 class TestIngestInvalidPayload:
     """POST /api/v1/ingest with invalid field values."""
 
-    async def test_invalid_event_type_returns_422(
-        self, async_client: AsyncClient, payload: dict[str, object]
-    ) -> None:
+    async def test_invalid_event_type_returns_422(self, async_client: AsyncClient, payload: dict[str, object]) -> None:
         payload["event_type"] = "invalid_type"
         resp = await async_client.post("/api/v1/ingest", json=payload)
         assert resp.status_code == 422
 
-    async def test_invalid_status_returns_422(
-        self, async_client: AsyncClient, payload: dict[str, object]
-    ) -> None:
+    async def test_invalid_status_returns_422(self, async_client: AsyncClient, payload: dict[str, object]) -> None:
         payload["status"] = "unknown"
         resp = await async_client.post("/api/v1/ingest", json=payload)
         assert resp.status_code == 422
 
-    async def test_invalid_timestamp_returns_422(
-        self, async_client: AsyncClient, payload: dict[str, object]
-    ) -> None:
+    async def test_invalid_timestamp_returns_422(self, async_client: AsyncClient, payload: dict[str, object]) -> None:
         payload["timestamp"] = "not-a-date"
         resp = await async_client.post("/api/v1/ingest", json=payload)
         assert resp.status_code == 422
@@ -104,9 +86,7 @@ class TestIngestMissingFields:
         resp = await async_client.post("/api/v1/ingest", json=payload)
         assert resp.status_code == 422
 
-    async def test_missing_timestamp_returns_422(
-        self, async_client: AsyncClient, payload: dict[str, object]
-    ) -> None:
+    async def test_missing_timestamp_returns_422(self, async_client: AsyncClient, payload: dict[str, object]) -> None:
         del payload["timestamp"]
         resp = await async_client.post("/api/v1/ingest", json=payload)
         assert resp.status_code == 422
