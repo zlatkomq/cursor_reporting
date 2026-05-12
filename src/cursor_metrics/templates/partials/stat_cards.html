@@ -1,0 +1,18 @@
+<div class="stat-cards">
+    <div class="card stat-card">
+        <div class="label">Total Events</div>
+        <div class="value">{{ overview.total_events | default(0) | int }}</div>
+    </div>
+    <div class="card stat-card">
+        <div class="label">Active Developers</div>
+        <div class="value">{{ overview.active_developers | default(0) | int }}</div>
+    </div>
+    <div class="card stat-card">
+        <div class="label">Top Model</div>
+        <div class="value" style="font-size: 20px;">{{ overview.top_model | default("—") }}</div>
+    </div>
+    <div class="card stat-card">
+        <div class="label">Estimated Cost</div>
+        <div class="value">${{ "%.2f" | format(overview.estimated_cost_usd | default(0)) }}</div>
+    </div>
+</div>

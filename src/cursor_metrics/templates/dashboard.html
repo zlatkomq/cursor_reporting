@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — Cursor Metrics{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Overview</h1>
+    {% include "partials/date_filter.html" %}
+</div>
+
+<div id="dashboard-content">
+    {% include "partials/stat_cards.html" %}
+
+    <div class="card">
+        <div class="chart-container">
+            <canvas id="dailyChart"></canvas>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const ctx = document.getElementById('dailyChart').getContext('2d');
+new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: {{ daily_dates | tojson }},
+        datasets: [{
+            label: 'Events',
+            data: {{ daily_counts | tojson }},
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            fill: true,
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { labels: { color: '#e4e4e7' } } },
+        scales: {
+            x: { ticks: { color: '#71717a' }, grid: { color: '#1e1e2e' } },
+            y: { ticks: { color: '#71717a' }, grid: { color: '#1e1e2e' } }
+        }
+    }
+});
+</script>
+{% endblock %}

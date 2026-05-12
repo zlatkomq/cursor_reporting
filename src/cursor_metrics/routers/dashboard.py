@@ -34,7 +34,7 @@ def _build_metrics_service(session: AsyncSession) -> MetricsService:
 @router.get("/dashboard", response_class=HTMLResponse)
 async def dashboard_overview(
     request: Request,
-    current_user: str = Depends(get_current_user),  # noqa: B008
+    current_user: str = Depends(get_current_user),
     days: int = Query(default=30, ge=1, le=365),
     session: AsyncSession = Depends(get_db),  # noqa: B008
 ) -> HTMLResponse:
@@ -61,7 +61,7 @@ async def dashboard_overview(
 @router.get("/dashboard/by-model", response_class=HTMLResponse)
 async def dashboard_by_model(
     request: Request,
-    current_user: str = Depends(get_current_user),  # noqa: B008
+    current_user: str = Depends(get_current_user),
     days: int = Query(default=30, ge=1, le=365),
     session: AsyncSession = Depends(get_db),  # noqa: B008
 ) -> HTMLResponse:
@@ -85,7 +85,7 @@ async def dashboard_by_model(
 @router.get("/dashboard/by-developer", response_class=HTMLResponse)
 async def by_developer_page(
     request: Request,
-    current_user: str = Depends(get_current_user),  # noqa: B008
+    current_user: str = Depends(get_current_user),
     days: int = Query(default=30, ge=1, le=365),
     session: AsyncSession = Depends(get_db),  # noqa: B008
 ) -> HTMLResponse:

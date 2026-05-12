@@ -76,9 +76,7 @@ class TestDashboardOverview:
 
         app.dependency_overrides[get_current_user] = lambda: "user@example.com"
 
-        with patch(
-            "cursor_metrics.routers.dashboard._build_metrics_service"
-        ) as mock_build:
+        with patch("cursor_metrics.routers.dashboard._build_metrics_service") as mock_build:
             mock_svc = AsyncMock()
             mock_svc.get_overview = AsyncMock(return_value=_MOCK_OVERVIEW)
             mock_build.return_value = mock_svc
@@ -95,9 +93,7 @@ class TestDashboardOverview:
 
         app.dependency_overrides[get_current_user] = lambda: "user@example.com"
 
-        with patch(
-            "cursor_metrics.routers.dashboard._build_metrics_service"
-        ) as mock_build:
+        with patch("cursor_metrics.routers.dashboard._build_metrics_service") as mock_build:
             mock_svc = AsyncMock()
             mock_svc.get_overview = AsyncMock(return_value=_MOCK_OVERVIEW)
             mock_build.return_value = mock_svc
@@ -138,9 +134,7 @@ class TestDashboardOverviewContent:
 
         app.dependency_overrides[get_current_user] = lambda: "user@example.com"
 
-        with patch(
-            "cursor_metrics.routers.dashboard._build_metrics_service"
-        ) as mock_build:
+        with patch("cursor_metrics.routers.dashboard._build_metrics_service") as mock_build:
             mock_svc = AsyncMock()
             mock_svc.get_overview = AsyncMock(return_value=_MOCK_OVERVIEW)
             mock_build.return_value = mock_svc
@@ -160,9 +154,7 @@ class TestDashboardOverviewContent:
 
         app.dependency_overrides[get_current_user] = lambda: "user@example.com"
 
-        with patch(
-            "cursor_metrics.routers.dashboard._build_metrics_service"
-        ) as mock_build:
+        with patch("cursor_metrics.routers.dashboard._build_metrics_service") as mock_build:
             mock_svc = AsyncMock()
             mock_svc.get_overview = AsyncMock(return_value=_MOCK_OVERVIEW)
             mock_build.return_value = mock_svc
@@ -178,9 +170,7 @@ class TestDashboardOverviewContent:
 
         app.dependency_overrides[get_current_user] = lambda: "user@example.com"
 
-        with patch(
-            "cursor_metrics.routers.dashboard._build_metrics_service"
-        ) as mock_build:
+        with patch("cursor_metrics.routers.dashboard._build_metrics_service") as mock_build:
             mock_svc = AsyncMock()
             mock_svc.get_overview = AsyncMock(return_value=_MOCK_OVERVIEW)
             mock_build.return_value = mock_svc
@@ -198,9 +188,7 @@ class TestDashboardOverviewContent:
 
         app.dependency_overrides[get_current_user] = lambda: "user@example.com"
 
-        with patch(
-            "cursor_metrics.routers.dashboard._build_metrics_service"
-        ) as mock_build:
+        with patch("cursor_metrics.routers.dashboard._build_metrics_service") as mock_build:
             mock_svc = AsyncMock()
             mock_svc.get_overview = AsyncMock(return_value=_MOCK_OVERVIEW)
             mock_build.return_value = mock_svc
@@ -218,9 +206,7 @@ class TestByDeveloper:
     """GET /dashboard/by-developer — authenticated HTML page."""
 
     @pytest.mark.asyncio()
-    async def test_authenticated_returns_200_with_table(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_authenticated_returns_200_with_table(self, client: AsyncClient) -> None:
         from cursor_metrics.dependencies import get_current_user
         from cursor_metrics.main import app
 
@@ -246,9 +232,7 @@ class TestByDeveloper:
             ],
         }
 
-        with patch(
-            "cursor_metrics.routers.dashboard._build_metrics_service"
-        ) as mock_build:
+        with patch("cursor_metrics.routers.dashboard._build_metrics_service") as mock_build:
             mock_svc = AsyncMock()
             mock_svc.get_by_developer = AsyncMock(return_value=mock_data)
             mock_build.return_value = mock_svc
@@ -268,9 +252,7 @@ class TestByDeveloper:
         assert "<table" in resp.text
 
     @pytest.mark.asyncio()
-    async def test_empty_developers_shows_no_data_message(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_empty_developers_shows_no_data_message(self, client: AsyncClient) -> None:
         from cursor_metrics.dependencies import get_current_user
         from cursor_metrics.main import app
 
@@ -278,9 +260,7 @@ class TestByDeveloper:
 
         mock_data = {"period_days": 30, "developers": []}
 
-        with patch(
-            "cursor_metrics.routers.dashboard._build_metrics_service"
-        ) as mock_build:
+        with patch("cursor_metrics.routers.dashboard._build_metrics_service") as mock_build:
             mock_svc = AsyncMock()
             mock_svc.get_by_developer = AsyncMock(return_value=mock_data)
             mock_build.return_value = mock_svc
@@ -298,9 +278,7 @@ class TestByDeveloperUnauthenticated:
     """GET /dashboard/by-developer — unauthenticated access."""
 
     @pytest.mark.asyncio()
-    async def test_unauthenticated_redirects_to_login(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_unauthenticated_redirects_to_login(self, client: AsyncClient) -> None:
         from cursor_metrics.dependencies import get_current_user
         from cursor_metrics.main import app
 
@@ -320,9 +298,7 @@ class TestByModel:
     """GET /dashboard/by-model — authenticated HTML page."""
 
     @pytest.mark.asyncio()
-    async def test_authenticated_returns_200_with_table(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_authenticated_returns_200_with_table(self, client: AsyncClient) -> None:
         from cursor_metrics.dependencies import get_current_user
         from cursor_metrics.main import app
 
@@ -341,9 +317,7 @@ class TestByModel:
             ],
         }
 
-        with patch(
-            "cursor_metrics.routers.dashboard._build_metrics_service"
-        ) as mock_build:
+        with patch("cursor_metrics.routers.dashboard._build_metrics_service") as mock_build:
             mock_svc = AsyncMock()
             mock_svc.get_by_model = AsyncMock(return_value=mock_data)
             mock_build.return_value = mock_svc
@@ -367,9 +341,7 @@ class TestByModelUnauthenticated:
     """GET /dashboard/by-model — unauthenticated access."""
 
     @pytest.mark.asyncio()
-    async def test_unauthenticated_redirects_to_login(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_unauthenticated_redirects_to_login(self, client: AsyncClient) -> None:
         from cursor_metrics.dependencies import get_current_user
         from cursor_metrics.main import app
 
