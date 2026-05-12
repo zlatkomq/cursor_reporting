@@ -86,6 +86,10 @@ class TestServices:
         hc = db["healthcheck"]
         assert "test" in hc
 
+    def test_db_restart_policy(self, compose: dict) -> None:
+        db = compose["services"]["db"]
+        assert db.get("restart") == "unless-stopped"
+
     def test_db_volume_mount(self, compose: dict) -> None:
         db = compose["services"]["db"]
         volumes = db.get("volumes", [])
