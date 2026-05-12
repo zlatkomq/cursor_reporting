@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Usage by Developer — Cursor Metrics{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Usage by Developer</h1>
+    {% include "partials/date_filter.html" %}
+</div>
+
+<div id="dashboard-content">
+    {% if developers %}
+    <div class="card">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Developer</th>
+                    <th>Events</th>
+                    <th>Top Model</th>
+                    <th>Avg Duration</th>
+                    <th>Last Active</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for dev in developers %}
+                <tr>
+                    <td class="text-muted">{{ loop.index }}</td>
+                    <td>{{ dev.email }}</td>
+                    <td><strong>{{ "{:,}".format(dev.event_count) }}</strong></td>
+                    <td><span class="text-blue">{{ dev.top_model }}</span></td>
+                    <td>{{ "%.1f"|format(dev.avg_duration_ms / 1000) }}s</td>
+                    <td class="text-secondary">{{ dev.last_active[:10] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="card" style="text-align: center; padding: 48px 24px;">
+        <p class="text-secondary">No data for this period</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
