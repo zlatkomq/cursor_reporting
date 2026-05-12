@@ -3,13 +3,17 @@
 from __future__ import annotations
 
 import asyncio
+from typing import TYPE_CHECKING
 
 from sqlalchemy.ext.asyncio import create_async_engine
 
+import cursor_metrics.models.db  # noqa: F401 — register models with Base.metadata
 from alembic import context
 from cursor_metrics.config import get_settings
 from cursor_metrics.database import Base
-from cursor_metrics.models.db import DashboardUser, MetricsEvent, ModelPricing  # noqa: F401
+
+if TYPE_CHECKING:
+    from sqlalchemy import Connection
 
 target_metadata = Base.metadata
 
@@ -28,7 +32,7 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
-def do_run_migrations(connection):  # type: ignore[no-untyped-def]
+def do_run_migrations(connection: Connection) -> None:
     """Execute migration operations against the given connection."""
     context.configure(connection=connection, target_metadata=target_metadata)
 

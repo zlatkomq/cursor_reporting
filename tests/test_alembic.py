@@ -9,8 +9,6 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from alembic import op as _  # noqa: F401
-
 if TYPE_CHECKING:
     from collections.abc import Generator
 
