@@ -9,7 +9,9 @@ from sqlalchemy import text
 from cursor_metrics.config import get_settings
 from cursor_metrics.database import async_engine
 from cursor_metrics.models.metrics import HealthCheckResponse
+from cursor_metrics.routers.auth import router as auth_router
 from cursor_metrics.routers.ingest import router as ingest_router
+from cursor_metrics.routers.reports import router as reports_router
 
 logger = structlog.get_logger()
 
@@ -17,7 +19,9 @@ app = FastAPI(
     title="Cursor Metrics",
     version=get_settings().APP_VERSION,
 )
+app.include_router(auth_router)
 app.include_router(ingest_router)
+app.include_router(reports_router)
 
 
 @app.get("/", response_model=HealthCheckResponse)
