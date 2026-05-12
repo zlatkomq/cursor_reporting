@@ -26,8 +26,12 @@ class MetricsRepository:
 
     async def count_events(self, since: datetime) -> int:
         """Return total number of events since the given timestamp."""
-        stmt = select(func.count()).select_from(MetricsEvent).where(
-            MetricsEvent.timestamp >= since,
+        stmt = (
+            select(func.count())
+            .select_from(MetricsEvent)
+            .where(
+                MetricsEvent.timestamp >= since,
+            )
         )
         result = await self._session.execute(stmt)
         return result.scalar_one()
@@ -58,30 +62,13 @@ class MetricsRepository:
         """Return (date, count) pairs ordered by date ascending."""
         day = func.date(MetricsEvent.timestamp).label("day")
         cnt = func.count().label("cnt")
-        stmt = (
-            select(day, cnt)
-            .where(MetricsEvent.timestamp >= since)
-            .group_by(day)
-            .order_by(day)
-        )
+        stmt = select(day, cnt).where(MetricsEvent.timestamp >= since).group_by(day).order_by(day)
         result = await self._session.execute(stmt)
         return [(row.day, row.cnt) for row in result.all()]
 
     async def events_by_developer(self, since: datetime) -> list[dict]:
         """Return per-developer aggregates ordered by event count descending."""
         event_count = func.count().label("event_count")
-        top_model_subq = (
-            select(MetricsEvent.model)
-            .where(
-                MetricsEvent.user_email == MetricsEvent.user_email,
-                MetricsEvent.timestamp >= since,
-            )
-            .correlate(MetricsEvent)
-            .group_by(MetricsEvent.model)
-            .order_by(func.count().desc())
-            .limit(1)
-            .scalar_subquery()
-        )
         stmt = (
             select(
                 MetricsEvent.user_email.label("email"),
@@ -114,13 +101,15 @@ class MetricsRepository:
             )
             top_model_result = await self._session.execute(top_model_stmt)
             model_name = top_model_result.scalar_one_or_none()
-            dev_list.append({
-                "email": row.email,
-                "event_count": row.event_count,
-                "top_model": model_name,
-                "avg_duration_ms": float(row.avg_duration_ms) if row.avg_duration_ms is not None else None,
-                "last_active": row.last_active,
-            })
+            dev_list.append(
+                {
+                    "email": row.email,
+                    "event_count": row.event_count,
+                    "top_model": model_name,
+                    "avg_duration_ms": float(row.avg_duration_ms) if row.avg_duration_ms is not None else None,
+                    "last_active": row.last_active,
+                }
+            )
         return dev_list
 
     async def events_by_model(self, since: datetime) -> list[dict]:

@@ -82,7 +82,7 @@ async def _authenticated_user() -> str:
     return "test@example.com"
 
 
-async def _mock_db() -> AsyncMock:  # noqa: RUF029
+async def _mock_db() -> AsyncMock:
     return AsyncMock()
 
 
@@ -106,10 +106,11 @@ async def auth_client(_mock_services: None) -> AsyncIterator[AsyncClient]:
 @pytest.fixture()
 async def unauth_client(_mock_services: None) -> AsyncIterator[AsyncClient]:
     from cursor_metrics.database import get_db
+    from cursor_metrics.dependencies import get_current_user
     from cursor_metrics.main import app
 
     app.dependency_overrides[get_db] = _mock_db
-    app.dependency_overrides.pop(get_current_user, None) if "get_current_user" in str(app.dependency_overrides) else None
+    app.dependency_overrides.pop(get_current_user, None)
 
     with patch("cursor_metrics.main.async_engine", _mock_engine()):
         transport = ASGITransport(app=app)

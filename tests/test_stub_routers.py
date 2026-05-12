@@ -28,10 +28,10 @@ class TestReportsRouter:
 
         assert "reports" in router.tags
 
-    def test_router_has_no_routes(self) -> None:
+    def test_router_has_routes(self) -> None:
         from cursor_metrics.routers.reports import router
 
-        assert len(router.routes) == 0
+        assert len(router.routes) > 0
 
 
 class TestAuthRouter:
@@ -76,7 +76,7 @@ class TestDashboardRouter:
 
         assert "dashboard" in router.tags
 
-    def test_router_has_no_routes(self) -> None:
+    def test_router_has_routes(self) -> None:
         from cursor_metrics.routers.dashboard import router
 
-        assert len(router.routes) == 0
+        assert len(router.routes) > 0

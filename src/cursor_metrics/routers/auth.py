@@ -37,7 +37,7 @@ class _LoginRequest(BaseModel):
 @router.post("/api/v1/auth/login")
 async def api_login(
     body: _LoginRequest,
-    session: AsyncSession = Depends(get_db),  # noqa: B008
+    session: AsyncSession = Depends(get_db),
 ) -> JSONResponse:
     """JSON API login — returns access token or 401."""
     auth_service = _build_auth_service(session)
@@ -68,7 +68,7 @@ async def form_login(
     request: Request,
     email: str = Form(...),
     password: str = Form(...),
-    session: AsyncSession = Depends(get_db),  # noqa: B008
+    session: AsyncSession = Depends(get_db),
 ) -> Response:
     """Form-based login — sets cookie and redirects on success."""
     auth_service = _build_auth_service(session)

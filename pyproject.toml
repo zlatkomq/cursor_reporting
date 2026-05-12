@@ -52,6 +52,9 @@ select = [
     "RUF",  # ruff-specific rules
 ]
 
+[tool.ruff.lint.per-file-ignores]
+"src/cursor_metrics/routers/*.py" = ["B008"]
+
 [tool.ruff.lint.flake8-type-checking]
 runtime-evaluated-base-classes = ["pydantic.BaseModel"]
 runtime-evaluated-decorators = ["fastapi.routing.APIRouter.get", "fastapi.routing.APIRouter.post"]

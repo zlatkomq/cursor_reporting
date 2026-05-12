@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
 import bcrypt
@@ -38,7 +38,7 @@ class AuthService:
     def create_token(self, email: str) -> str:
         """Create a signed JWT with ``sub=email`` and ``exp`` claims."""
         settings = get_settings()
-        expire = datetime.now(timezone.utc) + timedelta(minutes=settings.JWT_EXPIRE_MINUTES)
+        expire = datetime.now(UTC) + timedelta(minutes=settings.JWT_EXPIRE_MINUTES)
         payload = {"sub": email, "exp": expire}
         return jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=_ALGORITHM)
 

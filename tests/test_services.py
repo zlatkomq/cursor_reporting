@@ -45,9 +45,11 @@ class TestMetricsServiceConstructor:
     def test_instantiation_stores_repository(self) -> None:
         from cursor_metrics.repositories.metrics_repo import MetricsRepository
         from cursor_metrics.services.metrics_service import MetricsService
+        from cursor_metrics.services.pricing_service import PricingService
 
         mock_repo = MagicMock(spec=MetricsRepository)
-        svc = MetricsService(repository=mock_repo)
+        mock_pricing = MagicMock(spec=PricingService)
+        svc = MetricsService(repository=mock_repo, pricing_service=mock_pricing)
         assert svc._repository is mock_repo
 
     def test_has_docstring(self) -> None:

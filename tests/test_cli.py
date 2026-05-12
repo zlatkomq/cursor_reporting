@@ -27,9 +27,7 @@ class TestCLIArgParsing:
     """Argument parser handles expected flags."""
 
     def test_create_user_args(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setattr(
-            sys, "argv", ["cli", "create-user", "--email", "a@b.com", "--password", "s3cret"]
-        )
+        monkeypatch.setattr(sys, "argv", ["cli", "create-user", "--email", "a@b.com", "--password", "s3cret"])
         with patch("cursor_metrics.cli.asyncio") as mock_asyncio:
             from cursor_metrics.cli import main
 
@@ -82,9 +80,7 @@ class TestCreateUserCommand:
         mock_repo_instance.create = AsyncMock(return_value=mock_user)
 
         with (
-            patch(
-                "cursor_metrics.database.AsyncSessionLocal", return_value=mock_session_ctx
-            ),
+            patch("cursor_metrics.database.AsyncSessionLocal", return_value=mock_session_ctx),
             patch(
                 "cursor_metrics.services.auth_service.AuthService.hash_password",
                 return_value="hashed-pw",
@@ -99,9 +95,7 @@ class TestCreateUserCommand:
             await create_user("test@example.com", "plain-pw")
 
             mock_hash.assert_called_once_with("plain-pw")
-            mock_repo_instance.create.assert_called_once_with(
-                email="test@example.com", password_hash="hashed-pw"
-            )
+            mock_repo_instance.create.assert_called_once_with(email="test@example.com", password_hash="hashed-pw")
             mock_session.commit.assert_called_once()
 
 

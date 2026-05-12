@@ -48,9 +48,7 @@ class TestAPILogin:
     """POST /api/v1/auth/login — JSON API."""
 
     @pytest.mark.asyncio()
-    async def test_valid_credentials_returns_token(
-        self, client: AsyncClient, mock_db_session: AsyncMock
-    ) -> None:
+    async def test_valid_credentials_returns_token(self, client: AsyncClient, mock_db_session: AsyncMock) -> None:
         mock_user = MagicMock()
         mock_user.email = "user@example.com"
         mock_user.password_hash = "$2b$12$hashvalue"
@@ -74,9 +72,7 @@ class TestAPILogin:
         assert body["token_type"] == "bearer"
 
     @pytest.mark.asyncio()
-    async def test_invalid_credentials_returns_401(
-        self, client: AsyncClient, mock_db_session: AsyncMock
-    ) -> None:
+    async def test_invalid_credentials_returns_401(self, client: AsyncClient, mock_db_session: AsyncMock) -> None:
         mock_result = MagicMock()
         mock_result.scalars.return_value.first.return_value = None
         mock_db_session.execute = AsyncMock(return_value=mock_result)
@@ -156,7 +152,7 @@ class TestLogout:
 
         set_cookie = resp.headers.get("set-cookie", "")
         assert "session" in set_cookie
-        assert 'Max-Age=0' in set_cookie or "expires" in set_cookie.lower()
+        assert "Max-Age=0" in set_cookie or "expires" in set_cookie.lower()
 
 
 class TestLoginPage:

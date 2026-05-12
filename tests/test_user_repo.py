@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import inspect
-from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -11,9 +10,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from cursor_metrics.models.db import DashboardUser
 from cursor_metrics.repositories.user_repo import UserRepository
-
-if TYPE_CHECKING:
-    pass
 
 
 class TestUserRepositoryImport:

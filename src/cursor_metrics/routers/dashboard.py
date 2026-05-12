@@ -40,7 +40,7 @@ async def dashboard_overview(
     request: Request,
     current_user: str = Depends(get_current_user),
     days: int = Query(default=30, ge=1, le=365),
-    session: AsyncSession = Depends(get_db),  # noqa: B008
+    session: AsyncSession = Depends(get_db),
 ) -> HTMLResponse:
     """Render the main dashboard overview page."""
     service = _build_metrics_service(session)
@@ -66,7 +66,7 @@ async def dashboard_by_model(
     request: Request,
     current_user: str = Depends(get_current_user),
     days: int = Query(default=30, ge=1, le=365),
-    session: AsyncSession = Depends(get_db),  # noqa: B008
+    session: AsyncSession = Depends(get_db),
 ) -> HTMLResponse:
     """Render the by-model usage and cost page."""
     service = _build_metrics_service(session)
@@ -89,7 +89,7 @@ async def by_developer_page(
     request: Request,
     current_user: str = Depends(get_current_user),
     days: int = Query(default=30, ge=1, le=365),
-    session: AsyncSession = Depends(get_db),  # noqa: B008
+    session: AsyncSession = Depends(get_db),
 ) -> HTMLResponse:
     """Render the by-developer rankings page."""
     service = _build_metrics_service(session)

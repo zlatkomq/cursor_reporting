@@ -3,16 +3,12 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from cursor_metrics.models.db import ModelPricing
-from cursor_metrics.services.pricing_service import PricingService, _TOKENS_PER_EVENT
-
-if TYPE_CHECKING:
-    pass
+from cursor_metrics.services.pricing_service import _TOKENS_PER_EVENT, PricingService
 
 
 def _make_pricing_row(

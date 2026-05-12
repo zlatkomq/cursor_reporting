@@ -42,9 +42,7 @@ class MetricsService:
             "active_developers": active_developers,
             "top_model": top_model,
             "estimated_cost_usd": float(total_cost),
-            "daily_counts": [
-                {"date": str(d), "count": c} for d, c in daily_counts
-            ],
+            "daily_counts": [{"date": str(d), "count": c} for d, c in daily_counts],
         }
 
     async def get_by_developer(self, days: int = 30) -> dict:
@@ -61,12 +59,14 @@ class MetricsService:
         enriched = []
         for m in models:
             cost = await self._pricing.estimate_cost(m["model"], m["event_count"])
-            enriched.append({
-                "model": m["model"],
-                "event_count": m["event_count"],
-                "developer_count": m["developer_count"],
-                "estimated_cost_usd": float(cost),
-                "avg_duration_ms": m["avg_duration_ms"],
-            })
+            enriched.append(
+                {
+                    "model": m["model"],
+                    "event_count": m["event_count"],
+                    "developer_count": m["developer_count"],
+                    "estimated_cost_usd": float(cost),
+                    "avg_duration_ms": m["avg_duration_ms"],
+                }
+            )
 
         return {"period_days": days, "models": enriched}

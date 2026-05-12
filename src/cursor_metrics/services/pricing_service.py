@@ -29,10 +29,7 @@ class PricingService:
         """Return ``{model: (cost_per_input, cost_per_output)}`` from *model_pricing*."""
         result = await self._session.execute(select(ModelPricing))
         rows = result.scalars().all()
-        return {
-            row.model: (row.cost_per_input_token, row.cost_per_output_token)
-            for row in rows
-        }
+        return {row.model: (row.cost_per_input_token, row.cost_per_output_token) for row in rows}
 
     async def estimate_cost(self, model: str, event_count: int) -> Decimal:
         """Estimate cost for *model* given *event_count*.

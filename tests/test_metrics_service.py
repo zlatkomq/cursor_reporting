@@ -4,15 +4,11 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from cursor_metrics.services.metrics_service import MetricsService
-
-if TYPE_CHECKING:
-    pass
 
 
 def _build_service(
@@ -30,30 +26,42 @@ def _build_service(
     repo.count_events.return_value = total_events
     repo.count_active_developers.return_value = active_devs
     repo.top_model.return_value = top_model
-    repo.daily_event_counts.return_value = [
-        (date(2026, 5, 1), 120),
-        (date(2026, 5, 2), 130),
-    ] if daily_counts is None else daily_counts
-    repo.events_by_developer.return_value = [
-        {
-            "email": "alice@example.com",
-            "event_count": 300,
-            "top_model": "claude-4-opus",
-            "avg_duration_ms": 450.0,
-            "last_active": "2026-05-10T12:00:00",
-        },
-        {
-            "email": "bob@example.com",
-            "event_count": 200,
-            "top_model": "gpt-4o",
-            "avg_duration_ms": 520.0,
-            "last_active": "2026-05-09T08:00:00",
-        },
-    ] if by_developer is None else by_developer
-    repo.events_by_model.return_value = [
-        {"model": "claude-4-opus", "event_count": 300, "developer_count": 3, "avg_duration_ms": 450.0},
-        {"model": "gpt-4o", "event_count": 200, "developer_count": 2, "avg_duration_ms": 520.0},
-    ] if by_model is None else by_model
+    repo.daily_event_counts.return_value = (
+        [
+            (date(2026, 5, 1), 120),
+            (date(2026, 5, 2), 130),
+        ]
+        if daily_counts is None
+        else daily_counts
+    )
+    repo.events_by_developer.return_value = (
+        [
+            {
+                "email": "alice@example.com",
+                "event_count": 300,
+                "top_model": "claude-4-opus",
+                "avg_duration_ms": 450.0,
+                "last_active": "2026-05-10T12:00:00",
+            },
+            {
+                "email": "bob@example.com",
+                "event_count": 200,
+                "top_model": "gpt-4o",
+                "avg_duration_ms": 520.0,
+                "last_active": "2026-05-09T08:00:00",
+            },
+        ]
+        if by_developer is None
+        else by_developer
+    )
+    repo.events_by_model.return_value = (
+        [
+            {"model": "claude-4-opus", "event_count": 300, "developer_count": 3, "avg_duration_ms": 450.0},
+            {"model": "gpt-4o", "event_count": 200, "developer_count": 2, "avg_duration_ms": 520.0},
+        ]
+        if by_model is None
+        else by_model
+    )
 
     pricing = AsyncMock()
     pricing.estimate_cost.return_value = estimate_cost
@@ -119,7 +127,13 @@ class TestGetByDeveloper:
     @pytest.mark.asyncio()
     async def test_wraps_developer_list(self) -> None:
         devs = [
-            {"email": "alice@example.com", "event_count": 300, "top_model": "claude-4-opus", "avg_duration_ms": 450.0, "last_active": "2026-05-10"},
+            {
+                "email": "alice@example.com",
+                "event_count": 300,
+                "top_model": "claude-4-opus",
+                "avg_duration_ms": 450.0,
+                "last_active": "2026-05-10",
+            },
         ]
         svc, _repo, _pricing = _build_service(by_developer=devs)
 

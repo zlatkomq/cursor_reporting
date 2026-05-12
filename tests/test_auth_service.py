@@ -2,18 +2,14 @@
 
 from __future__ import annotations
 
-from datetime import timedelta, timezone
-from typing import TYPE_CHECKING
+from datetime import UTC, timedelta
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from jose import jwt
 
 from cursor_metrics.models.db import DashboardUser
-from cursor_metrics.services.auth_service import AuthService, _ALGORITHM
-
-if TYPE_CHECKING:
-    pass
+from cursor_metrics.services.auth_service import _ALGORITHM, AuthService
 
 
 class TestAuthServiceImport:
@@ -90,13 +86,13 @@ class TestCreateToken:
         repo = MagicMock()
         svc = AuthService(user_repo=repo)
 
-        before = datetime.now(timezone.utc)
+        before = datetime.now(UTC)
         token = svc.create_token("user@example.com")
-        after = datetime.now(timezone.utc)
+        after = datetime.now(UTC)
 
         settings = get_settings()
         payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[_ALGORITHM])
-        exp = datetime.fromtimestamp(payload["exp"], tz=timezone.utc)
+        exp = datetime.fromtimestamp(payload["exp"], tz=UTC)
 
         expected_delta = timedelta(minutes=settings.JWT_EXPIRE_MINUTES)
         low = before + expected_delta - timedelta(seconds=2)
@@ -141,9 +137,6 @@ class TestVerifyToken:
         assert result is None
 
     def test_wrong_secret_returns_none(self) -> None:
-        from cursor_metrics.config import get_settings
-
-        settings = get_settings()
         payload = {"sub": "user@example.com", "exp": 9999999999}
         token = jwt.encode(payload, "wrong-secret-key", algorithm=_ALGORITHM)
 
@@ -168,9 +161,7 @@ class TestAuthenticate:
         return AsyncMock()
 
     @pytest.mark.asyncio()
-    async def test_valid_credentials_returns_token(
-        self, _mock_repo: AsyncMock, _user: MagicMock
-    ) -> None:
+    async def test_valid_credentials_returns_token(self, _mock_repo: AsyncMock, _user: MagicMock) -> None:
         _mock_repo.get_by_email = AsyncMock(return_value=_user)
 
         svc = AuthService(user_repo=_mock_repo)
@@ -183,9 +174,7 @@ class TestAuthenticate:
         assert email == "auth@example.com"
 
     @pytest.mark.asyncio()
-    async def test_wrong_password_returns_none(
-        self, _mock_repo: AsyncMock, _user: MagicMock
-    ) -> None:
+    async def test_wrong_password_returns_none(self, _mock_repo: AsyncMock, _user: MagicMock) -> None:
         _mock_repo.get_by_email = AsyncMock(return_value=_user)
 
         svc = AuthService(user_repo=_mock_repo)

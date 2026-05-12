@@ -3,16 +3,12 @@
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from cursor_metrics.repositories.metrics_repo import MetricsRepository
-
-if TYPE_CHECKING:
-    pass
 
 SINCE = datetime(2025, 1, 1)
 
