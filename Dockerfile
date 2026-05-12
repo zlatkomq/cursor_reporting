@@ -6,6 +6,7 @@ RUN pip install --no-cache-dir uv==0.5.*
 WORKDIR /app
 
 COPY pyproject.toml uv.lock* ./
+COPY src/ src/
 
 RUN uv venv /app/.venv && \
     uv sync --no-dev --frozen
