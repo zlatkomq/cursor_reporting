@@ -99,6 +99,66 @@ class TestSidebarPartial:
         assert template is not None
 
 
+class TestLoginTemplate:
+    """Verify login.html exists and contains expected elements."""
+
+    def test_file_exists(self) -> None:
+        assert (TEMPLATES_DIR / "login.html").is_file()
+
+    def test_contains_form_with_email_input(self) -> None:
+        content = (TEMPLATES_DIR / "login.html").read_text()
+        assert "<form" in content
+        assert 'name="email"' in content
+
+    def test_contains_form_with_password_input(self) -> None:
+        content = (TEMPLATES_DIR / "login.html").read_text()
+        assert 'name="password"' in content
+
+    def test_form_action_points_to_login(self) -> None:
+        content = (TEMPLATES_DIR / "login.html").read_text()
+        assert 'action="/dashboard/login"' in content
+
+    def test_contains_error_variable(self) -> None:
+        content = (TEMPLATES_DIR / "login.html").read_text()
+        assert "{{ error }}" in content
+
+    def test_contains_dark_theme_bg(self) -> None:
+        content = (TEMPLATES_DIR / "login.html").read_text()
+        assert "#0a0a0f" in content
+
+    def test_contains_sign_in_button(self) -> None:
+        content = (TEMPLATES_DIR / "login.html").read_text()
+        assert "Sign In" in content
+
+    def test_contains_cursor_metrics_heading(self) -> None:
+        content = (TEMPLATES_DIR / "login.html").read_text()
+        assert "Cursor Metrics" in content
+
+    def test_does_not_extend_base(self) -> None:
+        content = (TEMPLATES_DIR / "login.html").read_text()
+        assert "{% extends" not in content
+
+    def test_does_not_include_sidebar(self) -> None:
+        content = (TEMPLATES_DIR / "login.html").read_text()
+        assert "sidebar" not in content
+
+    def test_loadable_by_jinja(self, jinja_env: Environment) -> None:
+        template = jinja_env.get_template("login.html")
+        assert template is not None
+
+    def test_renders_without_error(self, jinja_env: Environment) -> None:
+        template = jinja_env.get_template("login.html")
+        rendered = template.render(error="")
+        assert "Cursor Metrics" in rendered
+        assert '<p class="error-message">' not in rendered
+
+    def test_renders_with_error(self, jinja_env: Environment) -> None:
+        template = jinja_env.get_template("login.html")
+        rendered = template.render(error="Invalid email or password")
+        assert "Invalid email or password" in rendered
+        assert "error-message" in rendered
+
+
 class TestDateFilterPartial:
     """Verify date filter partial exists and contains HTMX attributes."""
 

@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import TYPE_CHECKING
 
-from fastapi import APIRouter, Depends, Form, Response
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi import APIRouter, Depends, Form, Request, Response
+from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
 from cursor_metrics.config import get_settings
@@ -19,26 +21,12 @@ if TYPE_CHECKING:
 
 router = APIRouter()
 
+_TEMPLATES_DIR = Path(__file__).resolve().parent.parent / "templates"
+templates = Jinja2Templates(directory=str(_TEMPLATES_DIR))
+
 
 def _build_auth_service(session: AsyncSession) -> AuthService:
     return AuthService(UserRepository(session))
-
-
-_LOGIN_PAGE_HTML = """\
-<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="utf-8"><title>Login — Cursor Metrics</title></head>
-<body>
-<h1>Login</h1>
-{error}
-<form method="post" action="/dashboard/login">
-  <label>Email <input type="email" name="email" required></label><br>
-  <label>Password <input type="password" name="password" required></label><br>
-  <button type="submit">Login</button>
-</form>
-</body>
-</html>
-"""
 
 
 class _LoginRequest(BaseModel):
@@ -69,14 +57,15 @@ async def api_login(
     )
 
 
-@router.get("/dashboard/login", response_class=HTMLResponse)
-async def login_page() -> HTMLResponse:
+@router.get("/dashboard/login")
+async def login_page(request: Request) -> Response:
     """Render the login form."""
-    return HTMLResponse(_LOGIN_PAGE_HTML.format(error=""))
+    return templates.TemplateResponse(request, "login.html")
 
 
 @router.post("/dashboard/login")
 async def form_login(
+    request: Request,
     email: str = Form(...),
     password: str = Form(...),
     session: AsyncSession = Depends(get_db),  # noqa: B008
@@ -85,10 +74,10 @@ async def form_login(
     auth_service = _build_auth_service(session)
     token = await auth_service.authenticate(email, password)
     if token is None:
-        error_html = '<p style="color:red">Invalid email or password</p>'
-        return HTMLResponse(
-            _LOGIN_PAGE_HTML.format(error=error_html),
-            status_code=200,
+        return templates.TemplateResponse(
+            request,
+            "login.html",
+            {"error": "Invalid email or password"},
         )
     settings = get_settings()
     response = RedirectResponse(url="/dashboard", status_code=303)
