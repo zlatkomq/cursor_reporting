@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Usage by Model — Cursor Metrics{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Usage by Model</h1>
+    {% include "partials/date_filter.html" %}
+</div>
+
+<div id="dashboard-content">
+    {% include "partials/by_model_content.html" %}
+</div>
+{% endblock %}

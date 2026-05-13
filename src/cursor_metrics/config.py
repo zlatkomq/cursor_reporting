@@ -12,10 +12,12 @@ from cursor_metrics import __version__
 class Settings(BaseSettings):
     """Central configuration consumed by all application layers."""
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     DATABASE_URL: str
     SECRET_KEY: str
+    JWT_SECRET_KEY: str
+    JWT_EXPIRE_MINUTES: int = 1440
     APP_VERSION: str = __version__
     LOG_LEVEL: str = "INFO"
     DEBUG: bool = False

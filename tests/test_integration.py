@@ -159,3 +159,4 @@ class TestDockerComposeStack:
         assert result.returncode == 0, f"curl failed:\n{result.stderr}"
         body = json.loads(result.stdout)
         assert body["status"] == "accepted"
+        assert "id" in body

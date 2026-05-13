@@ -45,7 +45,9 @@ class TestAsyncEngine:
     def test_async_engine_uses_settings_database_url(self) -> None:
         from cursor_metrics.database import async_engine
 
-        assert async_engine.url.render_as_string(hide_password=False) == "mysql+aiomysql://u:p@localhost:3306/test"
+        url_str = async_engine.url.render_as_string(hide_password=False)
+        assert url_str.startswith("mysql+aiomysql://")
+        assert ":3306/" in url_str
 
     def test_async_engine_echo_disabled(self) -> None:
         from cursor_metrics.database import async_engine

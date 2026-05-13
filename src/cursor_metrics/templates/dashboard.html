@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — Cursor Metrics{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Overview</h1>
+    {% include "partials/date_filter.html" %}
+</div>
+
+<div id="dashboard-content">
+    {% include "partials/dashboard_content.html" %}
+</div>
+{% endblock %}
