@@ -5,7 +5,7 @@ import json
 import os
 import subprocess
 import sys
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from urllib.error import URLError
 from urllib.request import Request, urlopen
 
@@ -136,7 +136,7 @@ def _build_payload(event: dict) -> dict:
         "command_name": command_name,
         "skill_name": skill_name,
         "subagent_type": event.get("subagent_type"),
-        "timestamp": datetime.now(UTC).isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
 
@@ -145,7 +145,7 @@ def main() -> None:
 
     os.makedirs(LOG_DIR, exist_ok=True)
     with open(os.path.join(LOG_DIR, "stop-events.jsonl"), "a") as f:
-        f.write(json.dumps({"ts": datetime.now(UTC).isoformat(), "raw": raw.strip()}) + "\n")
+        f.write(json.dumps({"ts": datetime.now(timezone.utc).isoformat(), "raw": raw.strip()}) + "\n")
 
     event = json.loads(raw) if raw.strip() else {}
     payload = _build_payload(event)

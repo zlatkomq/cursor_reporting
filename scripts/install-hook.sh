@@ -37,13 +37,15 @@ else
     "stop": [
       {
         "command": "hooks/send-metrics.py",
-        "timeout": 10
+        "timeout": 10,
+        "loop_limit": null
       }
     ],
     "subagentStop": [
       {
         "command": "hooks/send-metrics.py",
-        "timeout": 10
+        "timeout": 10,
+        "loop_limit": null
       }
     ]
   }
