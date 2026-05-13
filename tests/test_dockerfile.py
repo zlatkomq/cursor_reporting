@@ -34,8 +34,14 @@ class TestDockerfile:
 
     def test_uvicorn_entrypoint(self, content: str) -> None:
         lower = content.lower()
-        assert "uvicorn" in lower, "Dockerfile must reference uvicorn in CMD or ENTRYPOINT"
-        assert "cursor_metrics.main:app" in content, "Dockerfile must use correct app entrypoint"
+        entrypoint_sh = ROOT / "entrypoint.sh"
+        if "entrypoint.sh" in lower and entrypoint_sh.exists():
+            ep_content = entrypoint_sh.read_text()
+            assert "uvicorn" in ep_content.lower(), "entrypoint.sh must reference uvicorn"
+            assert "cursor_metrics.main:app" in ep_content, "entrypoint.sh must use correct app entrypoint"
+        else:
+            assert "uvicorn" in lower, "Dockerfile must reference uvicorn in CMD or ENTRYPOINT"
+            assert "cursor_metrics.main:app" in content, "Dockerfile must use correct app entrypoint"
 
     def test_non_root_user(self, content: str) -> None:
         lower = content.lower()

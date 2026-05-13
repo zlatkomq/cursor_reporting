@@ -120,6 +120,14 @@ class TestIngestPayload:
         assert payload.user_email == "unknown"
         assert payload.status == "completed"
         assert payload.timestamp is None
+        assert payload.input_tokens is None
+        assert payload.output_tokens is None
+        assert payload.cache_read_tokens is None
+        assert payload.cache_write_tokens is None
+        assert payload.session_id is None
+        assert payload.workspace is None
+        assert payload.command_name is None
+        assert payload.skill_name is None
 
     def test_timestamp_parsed_as_datetime(self, valid_payload: dict[str, object]) -> None:
         from datetime import datetime
@@ -153,6 +161,14 @@ class TestIngestPayload:
             "loop_count",
             "cursor_version",
             "timestamp",
+            "input_tokens",
+            "output_tokens",
+            "cache_read_tokens",
+            "cache_write_tokens",
+            "session_id",
+            "workspace",
+            "command_name",
+            "skill_name",
         }
         assert set(IngestPayload.model_fields.keys()) == expected_fields
 
@@ -171,6 +187,44 @@ class TestIngestPayload:
         from cursor_metrics.models.metrics import IngestPayload
 
         valid_payload["loop_count"] = "not_a_number"
+        with pytest.raises(ValidationError):
+            IngestPayload(**valid_payload)
+
+    def test_accepts_all_new_fields(self, valid_payload: dict[str, object]) -> None:
+        from cursor_metrics.models.metrics import IngestPayload
+
+        valid_payload.update(
+            {
+                "input_tokens": 1500,
+                "output_tokens": 3200,
+                "cache_read_tokens": 800,
+                "cache_write_tokens": 200,
+                "session_id": "sess-abc-123",
+                "workspace": "/home/dev/project",
+                "command_name": "composer",
+                "skill_name": "create-rule",
+            }
+        )
+        payload = IngestPayload(**valid_payload)
+        assert payload.input_tokens == 1500
+        assert payload.output_tokens == 3200
+        assert payload.cache_read_tokens == 800
+        assert payload.cache_write_tokens == 200
+        assert payload.session_id == "sess-abc-123"
+        assert payload.workspace == "/home/dev/project"
+        assert payload.command_name == "composer"
+        assert payload.skill_name == "create-rule"
+
+    @pytest.mark.parametrize(
+        "field",
+        ["input_tokens", "output_tokens", "cache_read_tokens", "cache_write_tokens"],
+    )
+    def test_token_fields_reject_non_integer(self, valid_payload: dict[str, object], field: str) -> None:
+        from pydantic import ValidationError
+
+        from cursor_metrics.models.metrics import IngestPayload
+
+        valid_payload[field] = "not_a_number"
         with pytest.raises(ValidationError):
             IngestPayload(**valid_payload)
 

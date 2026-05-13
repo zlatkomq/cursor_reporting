@@ -28,11 +28,34 @@ def payload() -> dict[str, object]:
     return {**VALID_PAYLOAD}
 
 
+FULL_PAYLOAD: dict[str, object] = {
+    **VALID_PAYLOAD,
+    "input_tokens": 1200,
+    "output_tokens": 800,
+    "cache_read_tokens": 500,
+    "cache_write_tokens": 300,
+    "session_id": "sess-001",
+    "workspace": "/home/dev/project",
+    "command_name": "composer",
+    "skill_name": "create-rule",
+}
+
+
 class TestIngestValidPayload:
     """POST /api/v1/ingest with a well-formed payload."""
 
     async def test_valid_payload_returns_202(self, async_client: AsyncClient, payload: dict[str, object]) -> None:
         resp = await async_client.post("/api/v1/ingest", json=payload)
+        assert resp.status_code == 202
+
+    async def test_full_payload_with_all_fields_returns_202(self, async_client: AsyncClient) -> None:
+        resp = await async_client.post("/api/v1/ingest", json=FULL_PAYLOAD)
+        assert resp.status_code == 202
+        body = resp.json()
+        assert body["status"] == "accepted"
+
+    async def test_old_payload_without_new_fields_returns_202(self, async_client: AsyncClient) -> None:
+        resp = await async_client.post("/api/v1/ingest", json=VALID_PAYLOAD)
         assert resp.status_code == 202
 
     async def test_valid_payload_response_body(self, async_client: AsyncClient, payload: dict[str, object]) -> None:
@@ -81,7 +104,8 @@ class TestIngestMissingFields:
     """POST /api/v1/ingest with missing required fields."""
 
     async def test_missing_event_type_returns_422(
-        self, async_client: AsyncClient,
+        self,
+        async_client: AsyncClient,
     ) -> None:
         resp = await async_client.post("/api/v1/ingest", json={"conversation_id": "x"})
         assert resp.status_code == 422

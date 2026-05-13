@@ -31,6 +31,7 @@ class MetricsService:
         top_model = await self._repository.top_model(since)
         daily_counts = await self._repository.daily_event_counts(since)
         models = await self._repository.events_by_model(since)
+        token_totals = await self._repository.total_tokens(since)
 
         total_cost = Decimal(0)
         for m in models:
@@ -42,6 +43,10 @@ class MetricsService:
             "active_developers": active_developers,
             "top_model": top_model,
             "estimated_cost_usd": float(total_cost),
+            "total_input_tokens": token_totals["input_tokens"],
+            "total_output_tokens": token_totals["output_tokens"],
+            "total_cache_read_tokens": token_totals["cache_read_tokens"],
+            "total_cache_write_tokens": token_totals["cache_write_tokens"],
             "daily_counts": [{"date": str(d), "count": c} for d, c in daily_counts],
         }
 
@@ -58,7 +63,13 @@ class MetricsService:
 
         enriched = []
         for m in models:
-            cost = await self._pricing.estimate_cost(m["model"], m["event_count"])
+            cost = await self._pricing.estimate_cost(
+                m["model"],
+                m["event_count"],
+                input_tokens=m.get("total_input_tokens"),
+                output_tokens=m.get("total_output_tokens"),
+                cache_read_tokens=m.get("total_cache_read_tokens"),
+            )
             enriched.append(
                 {
                     "model": m["model"],
@@ -66,6 +77,9 @@ class MetricsService:
                     "developer_count": m["developer_count"],
                     "estimated_cost_usd": float(cost),
                     "avg_duration_ms": m["avg_duration_ms"],
+                    "total_input_tokens": m.get("total_input_tokens", 0),
+                    "total_output_tokens": m.get("total_output_tokens", 0),
+                    "total_cache_read_tokens": m.get("total_cache_read_tokens", 0),
                 }
             )
 

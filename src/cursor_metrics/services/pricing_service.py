@@ -25,20 +25,38 @@ class PricingService:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def get_pricing_map(self) -> dict[str, tuple[Decimal, Decimal]]:
-        """Return ``{model: (cost_per_input, cost_per_output)}`` from *model_pricing*."""
+    async def get_pricing_map(self) -> dict[str, tuple[Decimal, Decimal, Decimal]]:
+        """Return ``{model: (cost_per_input, cost_per_output, cost_per_cache_read)}`` from *model_pricing*."""
         result = await self._session.execute(select(ModelPricing))
         rows = result.scalars().all()
-        return {row.model: (row.cost_per_input_token, row.cost_per_output_token) for row in rows}
+        return {
+            row.model: (row.cost_per_input_token, row.cost_per_output_token, row.cost_per_cache_read_token)
+            for row in rows
+        }
 
-    async def estimate_cost(self, model: str, event_count: int) -> Decimal:
-        """Estimate cost for *model* given *event_count*.
+    async def estimate_cost(
+        self,
+        model: str,
+        event_count: int,
+        input_tokens: int | None = None,
+        output_tokens: int | None = None,
+        cache_read_tokens: int | None = None,
+    ) -> Decimal:
+        """Estimate cost for *model* using real token counts when available.
 
-        Uses a flat-rate placeholder of ~1 000 tokens per event until real
-        token counts are available in the ingest payload.
+        Falls back to a flat-rate placeholder of ~1 000 tokens per event when
+        ``input_tokens`` is *None* (legacy events without token data).
         """
         pricing_map = await self.get_pricing_map()
         if model not in pricing_map:
             return Decimal(0)
-        cost_in, cost_out = pricing_map[model]
+        cost_in, cost_out, cost_cache = pricing_map[model]
+
+        if input_tokens is not None:
+            return (
+                Decimal(input_tokens) * cost_in
+                + Decimal(output_tokens or 0) * cost_out
+                + Decimal(cache_read_tokens or 0) * cost_cache
+            )
+
         return event_count * (cost_in + cost_out) * _TOKENS_PER_EVENT

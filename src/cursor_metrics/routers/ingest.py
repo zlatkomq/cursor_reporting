@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from fastapi import APIRouter, Depends, status
@@ -10,7 +10,7 @@ from fastapi.responses import JSONResponse
 
 from cursor_metrics.database import get_db
 from cursor_metrics.models.db import MetricsEvent
-from cursor_metrics.models.metrics import IngestPayload
+from cursor_metrics.models.metrics import IngestPayload  # noqa: TC001 — runtime dep for FastAPI
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
@@ -34,7 +34,15 @@ async def ingest(
         duration_ms=payload.duration_ms,
         loop_count=payload.loop_count,
         cursor_version=payload.cursor_version,
-        timestamp=payload.timestamp or datetime.now(timezone.utc),
+        timestamp=payload.timestamp or datetime.now(UTC),
+        input_tokens=payload.input_tokens,
+        output_tokens=payload.output_tokens,
+        cache_read_tokens=payload.cache_read_tokens,
+        cache_write_tokens=payload.cache_write_tokens,
+        session_id=payload.session_id,
+        workspace=payload.workspace,
+        command_name=payload.command_name,
+        skill_name=payload.skill_name,
     )
     db.add(event)
     await db.commit()
