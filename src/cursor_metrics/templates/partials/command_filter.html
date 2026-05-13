@@ -1,0 +1,20 @@
+{% if commands %}
+<div class="filter-bar">
+    <button
+        class="btn{% if not current_command %} active{% endif %}"
+        hx-get="{{ filter_url | default('/dashboard') }}?days={{ current_days }}"
+        hx-target="#dashboard-content"
+        hx-swap="innerHTML"
+        hx-push-url="{{ filter_url | default('/dashboard') }}?days={{ current_days }}"
+    >All</button>
+    {% for cmd in commands %}
+    <button
+        class="btn{% if current_command == cmd %} active{% endif %}"
+        hx-get="{{ filter_url | default('/dashboard') }}?days={{ current_days }}&command={{ cmd }}"
+        hx-target="#dashboard-content"
+        hx-swap="innerHTML"
+        hx-push-url="{{ filter_url | default('/dashboard') }}?days={{ current_days }}&command={{ cmd }}"
+    >{{ cmd }}</button>
+    {% endfor %}
+</div>
+{% endif %}

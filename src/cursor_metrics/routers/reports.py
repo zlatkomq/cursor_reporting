@@ -27,29 +27,44 @@ def _build_metrics_service(session: AsyncSession) -> MetricsService:
 @router.get("/metrics")
 async def get_metrics_overview(
     days: int = Query(default=30),
+    command: str | None = Query(default=None),
     _user: str = Depends(get_current_user),
     session: AsyncSession = Depends(get_db),
 ) -> dict:
     if days not in (7, 30, 90):
         raise HTTPException(status_code=422, detail="days must be 7, 30, or 90")
     svc = _build_metrics_service(session)
-    return await svc.get_overview(days=days)
+    return await svc.get_overview(days=days, command=command)
 
 
 @router.get("/metrics/by-developer")
 async def get_metrics_by_developer(
     days: int = Query(default=30),
+    command: str | None = Query(default=None),
     _user: str = Depends(get_current_user),
     session: AsyncSession = Depends(get_db),
 ) -> dict:
     if days not in (7, 30, 90):
         raise HTTPException(status_code=422, detail="days must be 7, 30, or 90")
     svc = _build_metrics_service(session)
-    return await svc.get_by_developer(days=days)
+    return await svc.get_by_developer(days=days, command=command)
 
 
 @router.get("/metrics/by-model")
 async def get_metrics_by_model(
+    days: int = Query(default=30),
+    command: str | None = Query(default=None),
+    _user: str = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> dict:
+    if days not in (7, 30, 90):
+        raise HTTPException(status_code=422, detail="days must be 7, 30, or 90")
+    svc = _build_metrics_service(session)
+    return await svc.get_by_model(days=days, command=command)
+
+
+@router.get("/metrics/by-command")
+async def get_metrics_by_command(
     days: int = Query(default=30),
     _user: str = Depends(get_current_user),
     session: AsyncSession = Depends(get_db),
@@ -57,4 +72,4 @@ async def get_metrics_by_model(
     if days not in (7, 30, 90):
         raise HTTPException(status_code=422, detail="days must be 7, 30, or 90")
     svc = _build_metrics_service(session)
-    return await svc.get_by_model(days=days)
+    return await svc.get_by_command(days=days)

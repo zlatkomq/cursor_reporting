@@ -43,6 +43,7 @@ async def ingest(
         workspace=payload.workspace,
         command_name=payload.command_name,
         skill_name=payload.skill_name,
+        subagent_type=payload.subagent_type,
     )
     db.add(event)
     await db.commit()

@@ -24,29 +24,27 @@ class MetricsRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def count_events(self, since: datetime) -> int:
+    async def count_events(self, since: datetime, command_name: str | None = None) -> int:
         """Return total number of events since the given timestamp."""
-        stmt = (
-            select(func.count())
-            .select_from(MetricsEvent)
-            .where(
-                MetricsEvent.timestamp >= since,
-            )
-        )
+        stmt = select(func.count()).select_from(MetricsEvent).where(MetricsEvent.timestamp >= since)
+        if command_name:
+            stmt = stmt.where(MetricsEvent.command_name == command_name)
         result = await self._session.execute(stmt)
         return result.scalar_one()
 
-    async def count_active_developers(self, since: datetime) -> int:
+    async def count_active_developers(self, since: datetime, command_name: str | None = None) -> int:
         """Return number of distinct developers since the given timestamp."""
         stmt = (
             select(func.count(func.distinct(MetricsEvent.user_email)))
             .select_from(MetricsEvent)
             .where(MetricsEvent.timestamp >= since)
         )
+        if command_name:
+            stmt = stmt.where(MetricsEvent.command_name == command_name)
         result = await self._session.execute(stmt)
         return result.scalar_one()
 
-    async def top_model(self, since: datetime) -> str | None:
+    async def top_model(self, since: datetime, command_name: str | None = None) -> str | None:
         """Return the most-used model name, or None when no data exists."""
         stmt = (
             select(MetricsEvent.model)
@@ -55,18 +53,22 @@ class MetricsRepository:
             .order_by(func.count().desc())
             .limit(1)
         )
+        if command_name:
+            stmt = stmt.where(MetricsEvent.command_name == command_name)
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def daily_event_counts(self, since: datetime) -> list[tuple[date, int]]:
+    async def daily_event_counts(self, since: datetime, command_name: str | None = None) -> list[tuple[date, int]]:
         """Return (date, count) pairs ordered by date ascending."""
         day = func.date(MetricsEvent.timestamp).label("day")
         cnt = func.count().label("cnt")
         stmt = select(day, cnt).where(MetricsEvent.timestamp >= since).group_by(day).order_by(day)
+        if command_name:
+            stmt = stmt.where(MetricsEvent.command_name == command_name)
         result = await self._session.execute(stmt)
         return [(row.day, row.cnt) for row in result.all()]
 
-    async def events_by_developer(self, since: datetime) -> list[dict]:
+    async def events_by_developer(self, since: datetime, command_name: str | None = None) -> list[dict]:
         """Return per-developer aggregates ordered by event count descending."""
         event_count = func.count().label("event_count")
         stmt = (
@@ -84,6 +86,8 @@ class MetricsRepository:
             .group_by(MetricsEvent.user_email)
             .order_by(event_count.desc())
         )
+        if command_name:
+            stmt = stmt.where(MetricsEvent.command_name == command_name)
         result = await self._session.execute(stmt)
         rows = result.all()
 
@@ -99,6 +103,8 @@ class MetricsRepository:
                 .order_by(func.count().desc())
                 .limit(1)
             )
+            if command_name:
+                top_model_stmt = top_model_stmt.where(MetricsEvent.command_name == command_name)
             top_model_result = await self._session.execute(top_model_stmt)
             model_name = top_model_result.scalar_one_or_none()
             dev_list.append(
@@ -112,7 +118,7 @@ class MetricsRepository:
             )
         return dev_list
 
-    async def total_tokens(self, since: datetime) -> dict[str, int]:
+    async def total_tokens(self, since: datetime, command_name: str | None = None) -> dict[str, int]:
         """Return aggregated token counts for the period."""
         stmt = select(
             func.coalesce(func.sum(MetricsEvent.input_tokens), 0).label("input"),
@@ -120,6 +126,8 @@ class MetricsRepository:
             func.coalesce(func.sum(MetricsEvent.cache_read_tokens), 0).label("cache_read"),
             func.coalesce(func.sum(MetricsEvent.cache_write_tokens), 0).label("cache_write"),
         ).where(MetricsEvent.timestamp >= since)
+        if command_name:
+            stmt = stmt.where(MetricsEvent.command_name == command_name)
         row = (await self._session.execute(stmt)).one()
         return {
             "input_tokens": row.input,
@@ -128,7 +136,7 @@ class MetricsRepository:
             "cache_write_tokens": row.cache_write,
         }
 
-    async def events_by_model(self, since: datetime) -> list[dict]:
+    async def events_by_model(self, since: datetime, command_name: str | None = None) -> list[dict]:
         """Return per-model aggregates ordered by event count descending."""
         event_count = func.count().label("event_count")
         stmt = (
@@ -145,6 +153,8 @@ class MetricsRepository:
             .group_by(MetricsEvent.model)
             .order_by(event_count.desc())
         )
+        if command_name:
+            stmt = stmt.where(MetricsEvent.command_name == command_name)
         result = await self._session.execute(stmt)
         return [
             {
@@ -152,6 +162,47 @@ class MetricsRepository:
                 "event_count": row.event_count,
                 "developer_count": row.developer_count,
                 "avg_duration_ms": float(row.avg_duration_ms) if row.avg_duration_ms is not None else None,
+                "total_input_tokens": row.total_input_tokens,
+                "total_output_tokens": row.total_output_tokens,
+                "total_cache_read_tokens": row.total_cache_read_tokens,
+            }
+            for row in result.all()
+        ]
+
+    async def distinct_commands(self, since: datetime) -> list[str]:
+        """Return distinct non-null command_name values for the period, sorted."""
+        stmt = (
+            select(MetricsEvent.command_name)
+            .where(MetricsEvent.timestamp >= since, MetricsEvent.command_name.isnot(None))
+            .distinct()
+            .order_by(MetricsEvent.command_name)
+        )
+        result = await self._session.execute(stmt)
+        return [row[0] for row in result.all()]
+
+    async def events_by_command(self, since: datetime) -> list[dict]:
+        """Return per-command aggregates ordered by event count descending."""
+        event_count = func.count().label("event_count")
+        stmt = (
+            select(
+                MetricsEvent.command_name.label("command_name"),
+                event_count,
+                func.coalesce(func.sum(MetricsEvent.input_tokens), 0).label("total_input_tokens"),
+                func.coalesce(func.sum(MetricsEvent.output_tokens), 0).label("total_output_tokens"),
+                func.coalesce(func.sum(MetricsEvent.cache_read_tokens), 0).label("total_cache_read_tokens"),
+            )
+            .where(
+                MetricsEvent.timestamp >= since,
+                MetricsEvent.command_name.isnot(None),
+            )
+            .group_by(MetricsEvent.command_name)
+            .order_by(event_count.desc())
+        )
+        result = await self._session.execute(stmt)
+        return [
+            {
+                "command_name": row.command_name,
+                "event_count": row.event_count,
                 "total_input_tokens": row.total_input_tokens,
                 "total_output_tokens": row.total_output_tokens,
                 "total_cache_read_tokens": row.total_cache_read_tokens,

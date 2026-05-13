@@ -63,6 +63,7 @@ def _extract_user_text(event: dict) -> str | None:
 def _find_command_in_text(text: str) -> str | None:
     """Find a /command anywhere in the text (handles prefixed commands like 'make /specify')."""
     import re
+
     match = re.search(r"(?:^|\s)/(\w[\w-]*)", text)
     return match.group(1) if match else None
 
@@ -100,13 +101,25 @@ def _extract_workspace(event: dict) -> str | None:
     return None
 
 
+EVENT_TYPE_MAP = {
+    "stop": "stop",
+    "session_end": "session_end",
+    "subagentStop": "subagent_stop",
+}
+
+
 def _build_payload(event: dict) -> dict:
-    """Build the API ingest payload from a Cursor stop event."""
+    """Build the API ingest payload from a Cursor hook event."""
+    hook_event_name = event.get("hook_event_name", "stop")
     user_email = event.get("user_email") or _git_email()
-    command_name, skill_name = _extract_command(event.get("transcript_path"))
+
+    command_name: str | None = None
+    skill_name: str | None = None
+    if hook_event_name == "stop":
+        command_name, skill_name = _extract_command(event.get("transcript_path"))
 
     return {
-        "event_type": event.get("hook_event_name", "stop"),
+        "event_type": EVENT_TYPE_MAP.get(hook_event_name, "stop"),
         "conversation_id": event.get("conversation_id", "unknown"),
         "generation_id": event.get("generation_id", "unknown"),
         "model": event.get("model", "unknown"),
@@ -122,6 +135,7 @@ def _build_payload(event: dict) -> dict:
         "workspace": _extract_workspace(event),
         "command_name": command_name,
         "skill_name": skill_name,
+        "subagent_type": event.get("subagent_type"),
         "timestamp": datetime.now(UTC).isoformat(),
     }
 

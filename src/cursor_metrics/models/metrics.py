@@ -11,7 +11,7 @@ from pydantic import BaseModel
 class IngestPayload(BaseModel):
     """Telemetry payload sent by Cursor IDE hooks via POST /api/v1/ingest."""
 
-    event_type: Literal["stop", "session_end"]
+    event_type: Literal["stop", "session_end", "subagent_stop"]
     conversation_id: str = "unknown"
     generation_id: str = "unknown"
     model: str = "unknown"
@@ -29,6 +29,7 @@ class IngestPayload(BaseModel):
     workspace: str | None = None
     command_name: str | None = None
     skill_name: str | None = None
+    subagent_type: str | None = None
 
 
 class HealthCheckResponse(BaseModel):

@@ -118,7 +118,7 @@ class TestGetOverview:
             await svc.get_overview(days=7)
 
             expected_since = now - timedelta(days=7)
-            repo.count_events.assert_awaited_once_with(expected_since)
+            repo.count_events.assert_awaited_once_with(expected_since, command_name=None)
 
 
 class TestGetByDeveloper:

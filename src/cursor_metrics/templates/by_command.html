@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Usage by Command — Cursor Metrics{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Usage by Command</h1>
+    {% include "partials/date_filter.html" %}
+</div>
+
+<div id="dashboard-content">
+    {% include "partials/by_command_content.html" %}
+</div>
+{% endblock %}

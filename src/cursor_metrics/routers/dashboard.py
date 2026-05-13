@@ -40,11 +40,13 @@ async def dashboard_overview(
     request: Request,
     current_user: str = Depends(get_current_user),
     days: int = Query(default=30, ge=1, le=365),
+    command: str | None = Query(default=None),
     session: AsyncSession = Depends(get_db),
 ) -> HTMLResponse:
     """Render the main dashboard overview page."""
     service = _build_metrics_service(session)
-    overview = await service.get_overview(days)
+    overview = await service.get_overview(days, command=command)
+    commands = await service.get_available_commands(days)
 
     daily_dates = [entry["date"] for entry in overview["daily_counts"]]
     daily_counts = [entry["count"] for entry in overview["daily_counts"]]
@@ -55,6 +57,9 @@ async def dashboard_overview(
         "current_days": days,
         "daily_dates": daily_dates,
         "daily_counts": daily_counts,
+        "commands": commands,
+        "current_command": command,
+        "filter_url": "/dashboard",
     }
 
     template = "partials/dashboard_content.html" if _is_htmx(request) else "dashboard.html"
@@ -66,11 +71,13 @@ async def dashboard_by_model(
     request: Request,
     current_user: str = Depends(get_current_user),
     days: int = Query(default=30, ge=1, le=365),
+    command: str | None = Query(default=None),
     session: AsyncSession = Depends(get_db),
 ) -> HTMLResponse:
     """Render the by-model usage and cost page."""
     service = _build_metrics_service(session)
-    data = await service.get_by_model(days)
+    data = await service.get_by_model(days, command=command)
+    commands = await service.get_available_commands(days)
 
     context = {
         "current_user": current_user,
@@ -78,6 +85,8 @@ async def dashboard_by_model(
         "models": data["models"],
         "current_days": days,
         "filter_url": "/dashboard/by-model",
+        "commands": commands,
+        "current_command": command,
     }
 
     template = "partials/by_model_content.html" if _is_htmx(request) else "by_model.html"
@@ -89,18 +98,44 @@ async def by_developer_page(
     request: Request,
     current_user: str = Depends(get_current_user),
     days: int = Query(default=30, ge=1, le=365),
+    command: str | None = Query(default=None),
     session: AsyncSession = Depends(get_db),
 ) -> HTMLResponse:
     """Render the by-developer rankings page."""
     service = _build_metrics_service(session)
-    data = await service.get_by_developer(days=days)
+    data = await service.get_by_developer(days=days, command=command)
+    commands = await service.get_available_commands(days)
 
     context = {
         "current_user": current_user,
         "developers": data["developers"],
         "current_days": data["period_days"],
         "filter_url": "/dashboard/by-developer",
+        "commands": commands,
+        "current_command": command,
     }
 
     template = "partials/by_developer_content.html" if _is_htmx(request) else "by_developer.html"
+    return templates.TemplateResponse(request, template, context=context)
+
+
+@router.get("/dashboard/by-command", response_class=HTMLResponse)
+async def dashboard_by_command(
+    request: Request,
+    current_user: str = Depends(get_current_user),
+    days: int = Query(default=30, ge=1, le=365),
+    session: AsyncSession = Depends(get_db),
+) -> HTMLResponse:
+    """Render the by-command breakdown page."""
+    service = _build_metrics_service(session)
+    data = await service.get_by_command(days)
+
+    context = {
+        "current_user": current_user,
+        "commands": data["commands"],
+        "current_days": days,
+        "filter_url": "/dashboard/by-command",
+    }
+
+    template = "partials/by_command_content.html" if _is_htmx(request) else "by_command.html"
     return templates.TemplateResponse(request, template, context=context)

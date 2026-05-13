@@ -169,6 +169,7 @@ class TestIngestPayload:
             "workspace",
             "command_name",
             "skill_name",
+            "subagent_type",
         }
         assert set(IngestPayload.model_fields.keys()) == expected_fields
 

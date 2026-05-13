@@ -1,0 +1,32 @@
+{% if commands %}
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>Command</th>
+                <th>Events</th>
+                <th>Input Tokens</th>
+                <th>Output Tokens</th>
+                <th>Cache Read Tokens</th>
+                <th>Total Tokens</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for cmd in commands %}
+            <tr>
+                <td><span class="text-blue">/{{ cmd.command_name }}</span></td>
+                <td>{{ "{:,}".format(cmd.event_count) }}</td>
+                <td>{{ "{:,}".format(cmd.total_input_tokens) }}</td>
+                <td>{{ "{:,}".format(cmd.total_output_tokens) }}</td>
+                <td>{{ "{:,}".format(cmd.total_cache_read_tokens) }}</td>
+                <td><strong>{{ "{:,}".format(cmd.total_tokens) }}</strong></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="card" style="text-align: center; padding: 48px 24px;">
+    <p class="text-secondary">No command data for this period.</p>
+</div>
+{% endif %}
