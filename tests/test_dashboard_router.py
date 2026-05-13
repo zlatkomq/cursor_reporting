@@ -101,7 +101,7 @@ class TestDashboardOverview:
             resp = await client.get("/dashboard?days=7")
 
         assert resp.status_code == 200
-        mock_svc.get_overview.assert_called_once_with(7)
+        mock_svc.get_overview.assert_called_once_with(7, command=None)
 
 
 class TestDashboardOverviewUnauthenticated:
@@ -477,7 +477,7 @@ class TestHTMXDateFilterDays:
                 headers={"HX-Request": "true"},
             )
 
-        mock_svc.get_overview.assert_called_once_with(7)
+        mock_svc.get_overview.assert_called_once_with(7, command=None)
 
     @pytest.mark.asyncio()
     async def test_htmx_overview_days_90(self, client: AsyncClient) -> None:
@@ -496,7 +496,7 @@ class TestHTMXDateFilterDays:
                 headers={"HX-Request": "true"},
             )
 
-        mock_svc.get_overview.assert_called_once_with(90)
+        mock_svc.get_overview.assert_called_once_with(90, command=None)
 
     @pytest.mark.asyncio()
     async def test_htmx_by_developer_days_90(self, client: AsyncClient) -> None:
@@ -520,7 +520,7 @@ class TestHTMXDateFilterDays:
                 headers={"HX-Request": "true"},
             )
 
-        mock_svc.get_by_developer.assert_called_once_with(days=90)
+        mock_svc.get_by_developer.assert_called_once_with(days=90, command=None)
 
     @pytest.mark.asyncio()
     async def test_htmx_by_model_days_7(self, client: AsyncClient) -> None:
@@ -544,4 +544,4 @@ class TestHTMXDateFilterDays:
                 headers={"HX-Request": "true"},
             )
 
-        mock_svc.get_by_model.assert_called_once_with(7)
+        mock_svc.get_by_model.assert_called_once_with(7, command=None)

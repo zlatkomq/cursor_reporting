@@ -7,28 +7,30 @@
 </div>
 
 <script>
-if (window._dailyChart) { window._dailyChart.destroy(); }
-const ctx = document.getElementById('dailyChart').getContext('2d');
-window._dailyChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-        labels: {{ daily_dates | tojson }},
-        datasets: [{
-            label: 'Events',
-            data: {{ daily_counts | tojson }},
-            borderColor: '#3b82f6',
-            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-            fill: true,
-            tension: 0.4
-        }]
-    },
-    options: {
-        responsive: true,
-        plugins: { legend: { labels: { color: '#e4e4e7' } } },
-        scales: {
-            x: { ticks: { color: '#71717a' }, grid: { color: '#1e1e2e' } },
-            y: { ticks: { color: '#71717a' }, grid: { color: '#1e1e2e' } }
+(function() {
+    if (window._dailyChart) { window._dailyChart.destroy(); }
+    const ctx = document.getElementById('dailyChart').getContext('2d');
+    window._dailyChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ daily_dates | tojson }},
+            datasets: [{
+                label: 'Events',
+                data: {{ daily_counts | tojson }},
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { labels: { color: '#e4e4e7' } } },
+            scales: {
+                x: { ticks: { color: '#71717a' }, grid: { color: '#1e1e2e' } },
+                y: { ticks: { color: '#71717a' }, grid: { color: '#1e1e2e' } }
+            }
         }
-    }
-});
+    });
+})();
 </script>

@@ -39,6 +39,12 @@ else
         "command": "hooks/send-metrics.py",
         "timeout": 10
       }
+    ],
+    "subagentStop": [
+      {
+        "command": "hooks/send-metrics.py",
+        "timeout": 10
+      }
     ]
   }
 }

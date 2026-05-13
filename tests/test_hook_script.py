@@ -219,11 +219,7 @@ class TestExtractCommand:
         transcript = tmp_path / "transcript.jsonl"
         entry = {
             "role": "user",
-            "message": {
-                "content": [
-                    {"type": "text", "text": "/specify 003 expand telemetry"}
-                ]
-            },
+            "message": {"content": [{"type": "text", "text": "/specify 003 expand telemetry"}]},
         }
         transcript.write_text(json.dumps(entry) + "\n")
         cmd, skill = send_metrics._extract_command(str(transcript))
@@ -239,7 +235,10 @@ class TestExtractCommand:
                 "content": [
                     {
                         "type": "text",
-                        "text": "<cursor_commands>some metadata</cursor_commands>\n<user_query>\n/specify 003 expand\n</user_query>",
+                        "text": (
+                            "<cursor_commands>some metadata</cursor_commands>\n"
+                            "<user_query>\n/specify 003 expand\n</user_query>"
+                        ),
                     }
                 ]
             },

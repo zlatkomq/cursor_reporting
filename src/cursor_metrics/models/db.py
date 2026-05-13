@@ -36,6 +36,7 @@ class MetricsEvent(Base):
     workspace: Mapped[str | None] = mapped_column(String(500), nullable=True)
     command_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
     skill_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    subagent_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
 
     __table_args__ = (
         Index("ix_metrics_events_user_email_timestamp", "user_email", "timestamp"),

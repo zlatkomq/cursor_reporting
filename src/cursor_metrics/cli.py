@@ -65,9 +65,7 @@ async def seed_pricing() -> None:
         inserted = 0
         updated = 0
         for model, (cost_in, cost_out, cost_cache) in DEFAULT_PRICING.items():
-            result = await session.execute(
-                select(ModelPricing).where(ModelPricing.model == model)
-            )
+            result = await session.execute(select(ModelPricing).where(ModelPricing.model == model))
             existing = result.scalar_one_or_none()
             if existing:
                 existing.cost_per_input_token = cost_in
@@ -75,12 +73,14 @@ async def seed_pricing() -> None:
                 existing.cost_per_cache_read_token = cost_cache
                 updated += 1
             else:
-                session.add(ModelPricing(
-                    model=model,
-                    cost_per_input_token=cost_in,
-                    cost_per_output_token=cost_out,
-                    cost_per_cache_read_token=cost_cache,
-                ))
+                session.add(
+                    ModelPricing(
+                        model=model,
+                        cost_per_input_token=cost_in,
+                        cost_per_output_token=cost_out,
+                        cost_per_cache_read_token=cost_cache,
+                    )
+                )
                 inserted += 1
         await session.commit()
     print(f"Model pricing seeded: {inserted} inserted, {updated} updated ({len(DEFAULT_PRICING)} total models)")

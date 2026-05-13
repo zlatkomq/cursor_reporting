@@ -22,20 +22,26 @@ class MetricsService:
         self._repository = repository
         self._pricing = pricing_service
 
-    async def get_overview(self, days: int = 30) -> dict:
+    async def get_overview(self, days: int = 30, command: str | None = None) -> dict:
         """Return stat card values + daily counts for the period."""
         since = datetime.utcnow() - timedelta(days=days)
 
-        total_events = await self._repository.count_events(since)
-        active_developers = await self._repository.count_active_developers(since)
-        top_model = await self._repository.top_model(since)
-        daily_counts = await self._repository.daily_event_counts(since)
-        models = await self._repository.events_by_model(since)
-        token_totals = await self._repository.total_tokens(since)
+        total_events = await self._repository.count_events(since, command_name=command)
+        active_developers = await self._repository.count_active_developers(since, command_name=command)
+        top_model = await self._repository.top_model(since, command_name=command)
+        daily_counts = await self._repository.daily_event_counts(since, command_name=command)
+        models = await self._repository.events_by_model(since, command_name=command)
+        token_totals = await self._repository.total_tokens(since, command_name=command)
 
         total_cost = Decimal(0)
         for m in models:
-            total_cost += await self._pricing.estimate_cost(m["model"], m["event_count"])
+            total_cost += await self._pricing.estimate_cost(
+                m["model"],
+                m["event_count"],
+                input_tokens=m.get("total_input_tokens"),
+                output_tokens=m.get("total_output_tokens"),
+                cache_read_tokens=m.get("total_cache_read_tokens"),
+            )
 
         return {
             "period_days": days,
@@ -50,16 +56,16 @@ class MetricsService:
             "daily_counts": [{"date": str(d), "count": c} for d, c in daily_counts],
         }
 
-    async def get_by_developer(self, days: int = 30) -> dict:
+    async def get_by_developer(self, days: int = 30, command: str | None = None) -> dict:
         """Return developer rankings sorted by event count."""
         since = datetime.utcnow() - timedelta(days=days)
-        developers = await self._repository.events_by_developer(since)
+        developers = await self._repository.events_by_developer(since, command_name=command)
         return {"period_days": days, "developers": developers}
 
-    async def get_by_model(self, days: int = 30) -> dict:
+    async def get_by_model(self, days: int = 30, command: str | None = None) -> dict:
         """Return model usage with cost estimates."""
         since = datetime.utcnow() - timedelta(days=days)
-        models = await self._repository.events_by_model(since)
+        models = await self._repository.events_by_model(since, command_name=command)
 
         enriched = []
         for m in models:
@@ -84,3 +90,29 @@ class MetricsService:
             )
 
         return {"period_days": days, "models": enriched}
+
+    async def get_available_commands(self, days: int = 30) -> list[str]:
+        """Return distinct command names seen in the period."""
+        since = datetime.utcnow() - timedelta(days=days)
+        return await self._repository.distinct_commands(since)
+
+    async def get_by_command(self, days: int = 30) -> dict:
+        """Return per-command aggregates with cost estimates."""
+        since = datetime.utcnow() - timedelta(days=days)
+        rows = await self._repository.events_by_command(since)
+
+        enriched = []
+        for row in rows:
+            total_tokens = row["total_input_tokens"] + row["total_output_tokens"]
+            enriched.append(
+                {
+                    "command_name": row["command_name"],
+                    "event_count": row["event_count"],
+                    "total_input_tokens": row["total_input_tokens"],
+                    "total_output_tokens": row["total_output_tokens"],
+                    "total_cache_read_tokens": row["total_cache_read_tokens"],
+                    "total_tokens": total_tokens,
+                }
+            )
+
+        return {"period_days": days, "commands": enriched}
