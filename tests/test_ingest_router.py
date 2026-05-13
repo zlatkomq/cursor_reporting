@@ -1,4 +1,4 @@
-"""Tests for POST /api/v1/ingest stub endpoint."""
+"""Tests for POST /api/v1/ingest endpoint with DB persistence."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import AsyncGenerator, Iterator
 
     from httpx import Response
 
@@ -21,6 +21,7 @@ def _required_env(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     get_settings.cache_clear()
     monkeypatch.setenv("DATABASE_URL", "mysql+aiomysql://u:p@localhost:3306/test")
     monkeypatch.setenv("SECRET_KEY", "test-secret-key-abc123")
+    monkeypatch.setenv("JWT_SECRET_KEY", "test-jwt-secret-key")
     yield
     get_settings.cache_clear()
 
@@ -42,7 +43,6 @@ def valid_payload() -> dict[str, object]:
 
 
 def _mock_engine() -> MagicMock:
-    """Return a mock async_engine so module import doesn't fail."""
     mock_conn = AsyncMock()
     mock_conn.execute = AsyncMock()
     mock_conn.__aenter__ = AsyncMock(return_value=mock_conn)
@@ -52,14 +52,30 @@ def _mock_engine() -> MagicMock:
     return engine
 
 
+def _mock_session() -> AsyncMock:
+    session = AsyncMock()
+    session.add = MagicMock()
+    session.commit = AsyncMock()
+    session.close = AsyncMock()
+    return session
+
+
+async def _mock_get_db() -> AsyncGenerator[AsyncMock]:
+    yield _mock_session()
+
+
 async def _post_ingest(payload: dict[str, object] | None = None) -> Response:
-    """POST to /api/v1/ingest with the given payload."""
+    from cursor_metrics.database import get_db
     from cursor_metrics.main import app
 
-    with patch("cursor_metrics.main.async_engine", _mock_engine()):
-        transport = ASGITransport(app=app)
-        async with AsyncClient(transport=transport, base_url="http://test") as client:
-            return await client.post("/api/v1/ingest", json=payload)
+    app.dependency_overrides[get_db] = _mock_get_db
+    try:
+        with patch("cursor_metrics.main.async_engine", _mock_engine()):
+            transport = ASGITransport(app=app)
+            async with AsyncClient(transport=transport, base_url="http://test") as client:
+                return await client.post("/api/v1/ingest", json=payload)
+    finally:
+        app.dependency_overrides.pop(get_db, None)
 
 
 class TestIngestEndpointValidPayload:
@@ -72,25 +88,16 @@ class TestIngestEndpointValidPayload:
     async def test_valid_payload_returns_json_body(self, valid_payload: dict[str, object]) -> None:
         resp = await _post_ingest(valid_payload)
         body = resp.json()
-        assert "status" in body
         assert body["status"] == "accepted"
+        assert "id" in body
 
     async def test_session_end_event_returns_202(self, valid_payload: dict[str, object]) -> None:
         valid_payload["event_type"] = "session_end"
         resp = await _post_ingest(valid_payload)
         assert resp.status_code == 202
 
-    async def test_minimal_payload_without_optionals_returns_202(self) -> None:
-        payload = {
-            "event_type": "stop",
-            "conversation_id": "conv-abc-123",
-            "generation_id": "gen-xyz-789",
-            "model": "claude-4-opus",
-            "user_email": "dev@company.com",
-            "status": "completed",
-            "timestamp": "2026-05-12T10:00:00Z",
-        }
-        resp = await _post_ingest(payload)
+    async def test_minimal_payload_returns_202(self) -> None:
+        resp = await _post_ingest({"event_type": "stop"})
         assert resp.status_code == 202
 
 
@@ -121,19 +128,8 @@ class TestIngestEndpointInvalidPayload:
 class TestIngestEndpointMissingFields:
     """POST /api/v1/ingest with missing required fields returns 422."""
 
-    async def test_missing_event_type_returns_422(self, valid_payload: dict[str, object]) -> None:
-        del valid_payload["event_type"]
-        resp = await _post_ingest(valid_payload)
-        assert resp.status_code == 422
-
-    async def test_missing_conversation_id_returns_422(self, valid_payload: dict[str, object]) -> None:
-        del valid_payload["conversation_id"]
-        resp = await _post_ingest(valid_payload)
-        assert resp.status_code == 422
-
-    async def test_missing_timestamp_returns_422(self, valid_payload: dict[str, object]) -> None:
-        del valid_payload["timestamp"]
-        resp = await _post_ingest(valid_payload)
+    async def test_missing_event_type_returns_422(self) -> None:
+        resp = await _post_ingest({"conversation_id": "x"})
         assert resp.status_code == 422
 
     async def test_empty_body_returns_422(self) -> None:

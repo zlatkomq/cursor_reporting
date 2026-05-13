@@ -110,59 +110,16 @@ class TestIngestPayload:
         with pytest.raises(ValidationError):
             IngestPayload(**valid_payload)
 
-    def test_rejects_missing_conversation_id(self, valid_payload: dict[str, object]) -> None:
-        from pydantic import ValidationError
-
+    def test_defaults_for_optional_fields(self) -> None:
         from cursor_metrics.models.metrics import IngestPayload
 
-        del valid_payload["conversation_id"]
-        with pytest.raises(ValidationError):
-            IngestPayload(**valid_payload)
-
-    def test_rejects_missing_generation_id(self, valid_payload: dict[str, object]) -> None:
-        from pydantic import ValidationError
-
-        from cursor_metrics.models.metrics import IngestPayload
-
-        del valid_payload["generation_id"]
-        with pytest.raises(ValidationError):
-            IngestPayload(**valid_payload)
-
-    def test_rejects_missing_model(self, valid_payload: dict[str, object]) -> None:
-        from pydantic import ValidationError
-
-        from cursor_metrics.models.metrics import IngestPayload
-
-        del valid_payload["model"]
-        with pytest.raises(ValidationError):
-            IngestPayload(**valid_payload)
-
-    def test_rejects_missing_user_email(self, valid_payload: dict[str, object]) -> None:
-        from pydantic import ValidationError
-
-        from cursor_metrics.models.metrics import IngestPayload
-
-        del valid_payload["user_email"]
-        with pytest.raises(ValidationError):
-            IngestPayload(**valid_payload)
-
-    def test_rejects_missing_status(self, valid_payload: dict[str, object]) -> None:
-        from pydantic import ValidationError
-
-        from cursor_metrics.models.metrics import IngestPayload
-
-        del valid_payload["status"]
-        with pytest.raises(ValidationError):
-            IngestPayload(**valid_payload)
-
-    def test_rejects_missing_timestamp(self, valid_payload: dict[str, object]) -> None:
-        from pydantic import ValidationError
-
-        from cursor_metrics.models.metrics import IngestPayload
-
-        del valid_payload["timestamp"]
-        with pytest.raises(ValidationError):
-            IngestPayload(**valid_payload)
+        payload = IngestPayload(event_type="stop")
+        assert payload.conversation_id == "unknown"
+        assert payload.generation_id == "unknown"
+        assert payload.model == "unknown"
+        assert payload.user_email == "unknown"
+        assert payload.status == "completed"
+        assert payload.timestamp is None
 
     def test_timestamp_parsed_as_datetime(self, valid_payload: dict[str, object]) -> None:
         from datetime import datetime

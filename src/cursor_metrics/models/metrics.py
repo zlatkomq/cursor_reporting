@@ -12,15 +12,15 @@ class IngestPayload(BaseModel):
     """Telemetry payload sent by Cursor IDE hooks via POST /api/v1/ingest."""
 
     event_type: Literal["stop", "session_end"]
-    conversation_id: str
-    generation_id: str
-    model: str
-    user_email: str
-    status: Literal["completed", "aborted", "error"]
+    conversation_id: str = "unknown"
+    generation_id: str = "unknown"
+    model: str = "unknown"
+    user_email: str = "unknown"
+    status: Literal["completed", "aborted", "error"] = "completed"
     duration_ms: int | None = None
     loop_count: int | None = None
     cursor_version: str | None = None
-    timestamp: datetime
+    timestamp: datetime | None = None
 
 
 class HealthCheckResponse(BaseModel):
