@@ -28,6 +28,7 @@ COPY --from=build /app/.venv /app/.venv
 COPY src/ src/
 COPY alembic/ alembic/
 COPY alembic.ini .
+COPY entrypoint.sh .
 
 ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONPATH="/app/src" \
@@ -38,4 +39,4 @@ EXPOSE 8000
 
 USER appuser
 
-ENTRYPOINT ["uvicorn", "cursor_metrics.main:app", "--host", "0.0.0.0", "--port", "8000"]
+ENTRYPOINT ["./entrypoint.sh"]

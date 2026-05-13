@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime  # noqa: TC003
 from decimal import Decimal  # noqa: TC003
 
-from sqlalchemy import BigInteger, DateTime, Index, Integer, Numeric, String, func
+from sqlalchemy import BigInteger, DateTime, Index, Integer, Numeric, String, func, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from cursor_metrics.database import Base
@@ -28,11 +28,21 @@ class MetricsEvent(Base):
     cursor_version: Mapped[str | None] = mapped_column(String(50), nullable=True)
     timestamp: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now())
+    input_tokens: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    output_tokens: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    cache_read_tokens: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    cache_write_tokens: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    session_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    workspace: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    command_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    skill_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
     __table_args__ = (
         Index("ix_metrics_events_user_email_timestamp", "user_email", "timestamp"),
         Index("ix_metrics_events_model_timestamp", "model", "timestamp"),
         Index("ix_metrics_events_conversation_id", "conversation_id"),
+        Index("ix_metrics_events_session_id", "session_id"),
+        Index("ix_metrics_events_workspace", "workspace"),
     )
 
 
@@ -45,6 +55,9 @@ class ModelPricing(Base):
     model: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
     cost_per_input_token: Mapped[Decimal] = mapped_column(Numeric(12, 8), nullable=False)
     cost_per_output_token: Mapped[Decimal] = mapped_column(Numeric(12, 8), nullable=False)
+    cost_per_cache_read_token: Mapped[Decimal] = mapped_column(
+        Numeric(12, 8), nullable=False, server_default=text("0.00000000")
+    )
     updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now())
 
 

@@ -18,8 +18,8 @@
                 <td>{{ dev.email }}</td>
                 <td><strong>{{ "{:,}".format(dev.event_count) }}</strong></td>
                 <td><span class="text-blue">{{ dev.top_model }}</span></td>
-                <td>{{ "%.1f"|format(dev.avg_duration_ms / 1000) }}s</td>
-                <td class="text-secondary">{{ dev.last_active[:10] }}</td>
+                <td>{% if dev.avg_duration_ms %}{{ "%.1f"|format(dev.avg_duration_ms / 1000) }}s{% else %}—{% endif %}</td>
+                <td class="text-secondary">{% if dev.last_active %}{{ dev.last_active.strftime('%Y-%m-%d') }}{% else %}—{% endif %}</td>
             </tr>
             {% endfor %}
         </tbody>

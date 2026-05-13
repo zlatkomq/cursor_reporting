@@ -208,7 +208,7 @@ The project ships a `hooks/` directory distributed to all developers as part of 
 
 | Hook | Trigger | Data Captured |
 |------|---------|---------------|
-| `stop` | Agent loop completes (milestone accepted) | model, status, loop_count, conversation_id, generation_id, user_email |
+| `stop` | Agent loop completes (milestone accepted) | model, status, loop_count, conversation_id, generation_id, user_email, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens, session_id, workspace, command_name, skill_name |
 | `sessionEnd` | Session lifecycle ends | duration_ms, reason, user_email |
 
 ### Developer Identity
@@ -228,7 +228,15 @@ Developer is identified by `user_email` — a field Cursor hooks provide automat
   "duration_ms": 45000,
   "loop_count": 3,
   "cursor_version": "string",
-  "timestamp": "ISO 8601"
+  "timestamp": "ISO 8601",
+  "input_tokens": 2117969,
+  "output_tokens": 19841,
+  "cache_read_tokens": 2046472,
+  "cache_write_tokens": 71458,
+  "session_id": "string",
+  "workspace": "string",
+  "command_name": "string | null",
+  "skill_name": "string | null"
 }
 ```
 
@@ -244,7 +252,7 @@ Token costs are derived server-side using a configurable pricing table mapping m
 
 | Table | Purpose |
 |-------|---------|
-| `metrics_events` | Raw telemetry events from all developers |
+| `metrics_events` | Raw telemetry events from all developers. Columns include token counts (`input_tokens`, `output_tokens`, `cache_read_tokens`, `cache_write_tokens`), session context (`session_id`, `workspace`), and command metadata (`command_name`, `skill_name`). |
 | `model_pricing` | Configurable model → cost-per-token mapping |
 | `dashboard_users` | Dashboard login accounts (email, password_hash) |
 

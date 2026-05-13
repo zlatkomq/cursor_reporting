@@ -112,6 +112,22 @@ class MetricsRepository:
             )
         return dev_list
 
+    async def total_tokens(self, since: datetime) -> dict[str, int]:
+        """Return aggregated token counts for the period."""
+        stmt = select(
+            func.coalesce(func.sum(MetricsEvent.input_tokens), 0).label("input"),
+            func.coalesce(func.sum(MetricsEvent.output_tokens), 0).label("output"),
+            func.coalesce(func.sum(MetricsEvent.cache_read_tokens), 0).label("cache_read"),
+            func.coalesce(func.sum(MetricsEvent.cache_write_tokens), 0).label("cache_write"),
+        ).where(MetricsEvent.timestamp >= since)
+        row = (await self._session.execute(stmt)).one()
+        return {
+            "input_tokens": row.input,
+            "output_tokens": row.output,
+            "cache_read_tokens": row.cache_read,
+            "cache_write_tokens": row.cache_write,
+        }
+
     async def events_by_model(self, since: datetime) -> list[dict]:
         """Return per-model aggregates ordered by event count descending."""
         event_count = func.count().label("event_count")
@@ -121,6 +137,9 @@ class MetricsRepository:
                 event_count,
                 func.count(func.distinct(MetricsEvent.user_email)).label("developer_count"),
                 func.avg(MetricsEvent.duration_ms).label("avg_duration_ms"),
+                func.coalesce(func.sum(MetricsEvent.input_tokens), 0).label("total_input_tokens"),
+                func.coalesce(func.sum(MetricsEvent.output_tokens), 0).label("total_output_tokens"),
+                func.coalesce(func.sum(MetricsEvent.cache_read_tokens), 0).label("total_cache_read_tokens"),
             )
             .where(MetricsEvent.timestamp >= since)
             .group_by(MetricsEvent.model)
@@ -133,6 +152,9 @@ class MetricsRepository:
                 "event_count": row.event_count,
                 "developer_count": row.developer_count,
                 "avg_duration_ms": float(row.avg_duration_ms) if row.avg_duration_ms is not None else None,
+                "total_input_tokens": row.total_input_tokens,
+                "total_output_tokens": row.total_output_tokens,
+                "total_cache_read_tokens": row.total_cache_read_tokens,
             }
             for row in result.all()
         ]

@@ -21,6 +21,14 @@ class IngestPayload(BaseModel):
     loop_count: int | None = None
     cursor_version: str | None = None
     timestamp: datetime | None = None
+    input_tokens: int | None = None
+    output_tokens: int | None = None
+    cache_read_tokens: int | None = None
+    cache_write_tokens: int | None = None
+    session_id: str | None = None
+    workspace: str | None = None
+    command_name: str | None = None
+    skill_name: str | None = None
 
 
 class HealthCheckResponse(BaseModel):

@@ -78,6 +78,51 @@ async def _post_ingest(payload: dict[str, object] | None = None) -> Response:
         app.dependency_overrides.pop(get_db, None)
 
 
+FULL_PAYLOAD: dict[str, object] = {
+    "event_type": "stop",
+    "conversation_id": "conv-abc-123",
+    "generation_id": "gen-xyz-789",
+    "model": "claude-4-opus",
+    "user_email": "dev@company.com",
+    "status": "completed",
+    "duration_ms": 45000,
+    "loop_count": 3,
+    "cursor_version": "1.2.0",
+    "timestamp": "2026-05-12T10:00:00Z",
+    "input_tokens": 1200,
+    "output_tokens": 800,
+    "cache_read_tokens": 500,
+    "cache_write_tokens": 300,
+    "session_id": "sess-001",
+    "workspace": "/home/dev/project",
+    "command_name": "composer",
+    "skill_name": "create-rule",
+}
+
+
+async def _post_ingest_with_session(
+    payload: dict[str, object],
+) -> tuple[Response, AsyncMock]:
+    """Post to /ingest and return (response, mock_session) for assertions."""
+    from cursor_metrics.database import get_db
+    from cursor_metrics.main import app
+
+    session = _mock_session()
+
+    async def _get_db_override() -> AsyncGenerator[AsyncMock]:
+        yield session
+
+    app.dependency_overrides[get_db] = _get_db_override
+    try:
+        with patch("cursor_metrics.main.async_engine", _mock_engine()):
+            transport = ASGITransport(app=app)
+            async with AsyncClient(transport=transport, base_url="http://test") as client:
+                resp = await client.post("/api/v1/ingest", json=payload)
+                return resp, session
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+
 class TestIngestEndpointValidPayload:
     """POST /api/v1/ingest with valid payloads returns 202 Accepted."""
 
@@ -99,6 +144,33 @@ class TestIngestEndpointValidPayload:
     async def test_minimal_payload_returns_202(self) -> None:
         resp = await _post_ingest({"event_type": "stop"})
         assert resp.status_code == 202
+
+    async def test_full_payload_with_all_fields_returns_202(self) -> None:
+        resp = await _post_ingest(FULL_PAYLOAD)
+        assert resp.status_code == 202
+        body = resp.json()
+        assert body["status"] == "accepted"
+
+    async def test_old_payload_without_new_fields_returns_202(self, valid_payload: dict[str, object]) -> None:
+        resp = await _post_ingest(valid_payload)
+        assert resp.status_code == 202
+
+    async def test_session_add_called_with_metrics_event(self) -> None:
+        from cursor_metrics.models.db import MetricsEvent
+
+        resp, session = await _post_ingest_with_session(FULL_PAYLOAD)
+        assert resp.status_code == 202
+        session.add.assert_called_once()
+        event = session.add.call_args[0][0]
+        assert isinstance(event, MetricsEvent)
+        assert event.input_tokens == 1200
+        assert event.output_tokens == 800
+        assert event.cache_read_tokens == 500
+        assert event.cache_write_tokens == 300
+        assert event.session_id == "sess-001"
+        assert event.workspace == "/home/dev/project"
+        assert event.command_name == "composer"
+        assert event.skill_name == "create-rule"
 
 
 class TestIngestEndpointInvalidPayload:

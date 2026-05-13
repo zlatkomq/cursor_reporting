@@ -195,6 +195,55 @@ class TestEventsByDeveloper:
         assert devs[0]["avg_duration_ms"] is None
 
 
+class TestTotalTokens:
+    """total_tokens returns aggregated token counts as a dict."""
+
+    @pytest.mark.asyncio()
+    async def test_total_tokens_returns_aggregates(self, session: AsyncMock) -> None:
+        row = MagicMock()
+        row.input = 1000
+        row.output = 2000
+        row.cache_read = 500
+        row.cache_write = 300
+
+        result_mock = MagicMock()
+        result_mock.one.return_value = row
+        session.execute = AsyncMock(return_value=result_mock)
+
+        repo = MetricsRepository(session=session)
+        totals = await repo.total_tokens(SINCE)
+
+        assert totals == {
+            "input_tokens": 1000,
+            "output_tokens": 2000,
+            "cache_read_tokens": 500,
+            "cache_write_tokens": 300,
+        }
+        session.execute.assert_awaited_once()
+
+    @pytest.mark.asyncio()
+    async def test_total_tokens_returns_zeros_when_empty(self, session: AsyncMock) -> None:
+        row = MagicMock()
+        row.input = 0
+        row.output = 0
+        row.cache_read = 0
+        row.cache_write = 0
+
+        result_mock = MagicMock()
+        result_mock.one.return_value = row
+        session.execute = AsyncMock(return_value=result_mock)
+
+        repo = MetricsRepository(session=session)
+        totals = await repo.total_tokens(SINCE)
+
+        assert totals == {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_tokens": 0,
+            "cache_write_tokens": 0,
+        }
+
+
 class TestEventsByModel:
     """events_by_model returns list of dicts with model aggregates."""
 
@@ -205,6 +254,9 @@ class TestEventsByModel:
         row.event_count = 100
         row.developer_count = 5
         row.avg_duration_ms = 250.0
+        row.total_input_tokens = 5000
+        row.total_output_tokens = 8000
+        row.total_cache_read_tokens = 1200
 
         result_mock = MagicMock()
         result_mock.all.return_value = [row]
@@ -218,6 +270,9 @@ class TestEventsByModel:
         assert models[0]["event_count"] == 100
         assert models[0]["developer_count"] == 5
         assert models[0]["avg_duration_ms"] == 250.0
+        assert models[0]["total_input_tokens"] == 5000
+        assert models[0]["total_output_tokens"] == 8000
+        assert models[0]["total_cache_read_tokens"] == 1200
         session.execute.assert_awaited_once()
 
     @pytest.mark.asyncio()
@@ -238,6 +293,9 @@ class TestEventsByModel:
         row.event_count = 10
         row.developer_count = 2
         row.avg_duration_ms = None
+        row.total_input_tokens = 0
+        row.total_output_tokens = 0
+        row.total_cache_read_tokens = 0
 
         result_mock = MagicMock()
         result_mock.all.return_value = [row]
@@ -247,3 +305,28 @@ class TestEventsByModel:
         models = await repo.events_by_model(SINCE)
 
         assert models[0]["avg_duration_ms"] is None
+
+    @pytest.mark.asyncio()
+    async def test_events_by_model_includes_token_sums(self, session: AsyncMock) -> None:
+        row = MagicMock()
+        row.model = "claude-3.5-sonnet"
+        row.event_count = 50
+        row.developer_count = 3
+        row.avg_duration_ms = 180.0
+        row.total_input_tokens = 12000
+        row.total_output_tokens = 9500
+        row.total_cache_read_tokens = 4000
+
+        result_mock = MagicMock()
+        result_mock.all.return_value = [row]
+        session.execute = AsyncMock(return_value=result_mock)
+
+        repo = MetricsRepository(session=session)
+        models = await repo.events_by_model(SINCE)
+
+        assert "total_input_tokens" in models[0]
+        assert "total_output_tokens" in models[0]
+        assert "total_cache_read_tokens" in models[0]
+        assert models[0]["total_input_tokens"] == 12000
+        assert models[0]["total_output_tokens"] == 9500
+        assert models[0]["total_cache_read_tokens"] == 4000

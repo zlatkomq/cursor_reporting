@@ -170,7 +170,9 @@ class TestGetByModel:
         assert entry["developer_count"] == 3
         assert entry["estimated_cost_usd"] == pytest.approx(3.5)
         assert entry["avg_duration_ms"] == 450.0
-        pricing.estimate_cost.assert_awaited_once_with("claude-4-opus", 300)
+        pricing.estimate_cost.assert_awaited_once_with(
+            "claude-4-opus", 300, input_tokens=None, output_tokens=None, cache_read_tokens=None
+        )
 
     @pytest.mark.asyncio()
     async def test_returns_period_days(self) -> None:
