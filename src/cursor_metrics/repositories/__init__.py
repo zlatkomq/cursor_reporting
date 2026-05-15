@@ -2,5 +2,6 @@
 
 from cursor_metrics.repositories.metrics_repo import MetricsRepository
 from cursor_metrics.repositories.user_repo import UserRepository
+from cursor_metrics.repositories.workflow_repo import WorkflowRepository
 
-__all__ = ["MetricsRepository", "UserRepository"]
+__all__ = ["MetricsRepository", "UserRepository", "WorkflowRepository"]

@@ -41,6 +41,7 @@ class MetricsService:
                 input_tokens=m.get("total_input_tokens"),
                 output_tokens=m.get("total_output_tokens"),
                 cache_read_tokens=m.get("total_cache_read_tokens"),
+                cache_write_tokens=m.get("total_cache_write_tokens"),
             )
 
         return {
@@ -54,6 +55,62 @@ class MetricsService:
             "total_cache_read_tokens": token_totals["cache_read_tokens"],
             "total_cache_write_tokens": token_totals["cache_write_tokens"],
             "daily_counts": [{"date": str(d), "count": c} for d, c in daily_counts],
+        }
+
+    async def get_overview_with_trends(self, days: int = 30) -> dict:
+        """Aggregate data for the Overview tab with trend information."""
+        since = datetime.utcnow() - timedelta(days=days)
+
+        total_requests = await self._repository.count_events(since)
+        token_totals = await self._repository.total_tokens(since)
+        models = await self._repository.events_by_model(since)
+        daily_tokens = await self._repository.daily_token_counts(days)
+        recent_event_rows = await self._repository.recent_events(limit=10)
+
+        total_tokens = token_totals["input_tokens"] + token_totals["output_tokens"]
+
+        total_cost = Decimal(0)
+        for m in models:
+            total_cost += await self._pricing.estimate_cost(
+                m["model"],
+                m["event_count"],
+                input_tokens=m.get("total_input_tokens"),
+                output_tokens=m.get("total_output_tokens"),
+                cache_read_tokens=m.get("total_cache_read_tokens"),
+                cache_write_tokens=m.get("total_cache_write_tokens"),
+            )
+
+        recent_events = []
+        for ev in recent_event_rows:
+            ev_input = ev.input_tokens or 0
+            ev_output = ev.output_tokens or 0
+            ev_cache = ev.cache_read_tokens or 0
+            ev_cache_write = ev.cache_write_tokens or 0
+            ev_cost = await self._pricing.estimate_cost(
+                ev.model,
+                event_count=1,
+                input_tokens=ev_input,
+                output_tokens=ev_output,
+                cache_read_tokens=ev_cache,
+                cache_write_tokens=ev_cache_write,
+            )
+            recent_events.append(
+                {
+                    "timestamp": ev.timestamp,
+                    "model": ev.model,
+                    "total_tokens": ev_input + ev_output,
+                    "cost": float(ev_cost),
+                    "duration_ms": ev.duration_ms or 0,
+                }
+            )
+
+        return {
+            "total_requests": total_requests,
+            "total_tokens": total_tokens,
+            "total_cost": float(total_cost),
+            "active_models": len(models),
+            "daily_tokens": daily_tokens,
+            "recent_events": recent_events,
         }
 
     async def get_by_developer(self, days: int = 30, command: str | None = None) -> dict:
@@ -75,6 +132,7 @@ class MetricsService:
                 input_tokens=m.get("total_input_tokens"),
                 output_tokens=m.get("total_output_tokens"),
                 cache_read_tokens=m.get("total_cache_read_tokens"),
+                cache_write_tokens=m.get("total_cache_write_tokens"),
             )
             enriched.append(
                 {

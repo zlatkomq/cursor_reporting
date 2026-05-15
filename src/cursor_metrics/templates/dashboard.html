@@ -2,14 +2,73 @@
 
 {% block title %}Dashboard — Cursor Metrics{% endblock %}
 
+{% block head %}
+<style>
+    .tab-bar {
+        display: flex;
+        gap: 0;
+        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 28px;
+        background: var(--bg-card);
+        border-radius: 8px 8px 0 0;
+        padding: 0 8px;
+    }
+
+    .tab {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 14px 20px;
+        background: none;
+        border: none;
+        border-bottom: 2px solid transparent;
+        color: var(--text-muted);
+        font-family: var(--font-stack);
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+        white-space: nowrap;
+    }
+
+    .tab:hover {
+        color: var(--text-secondary);
+        background: rgba(255, 255, 255, 0.03);
+    }
+
+    .tab.active {
+        color: var(--text-primary);
+        border-bottom-color: var(--accent-blue);
+    }
+
+    .tab.active:hover {
+        background: none;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="page-header">
-    <h1>Overview</h1>
-    {% include "partials/date_filter.html" %}
-    {% include "partials/command_filter.html" %}
+    <h1>Dashboard</h1>
 </div>
 
-<div id="dashboard-content">
-    {% include "partials/dashboard_content.html" %}
+<div class="tab-bar">
+    <button class="tab {% if active_tab == 'overview' %}active{% endif %}"
+            hx-get="/dashboard/overview"
+            hx-target="#tab-content"
+            hx-push-url="/dashboard?tab=overview">
+        Overview
+    </button>
+    <button class="tab {% if active_tab == 'funnel' %}active{% endif %}"
+            hx-get="/dashboard/funnel"
+            hx-target="#tab-content"
+            hx-push-url="/dashboard?tab=funnel">
+        Workflow Funnel
+    </button>
+</div>
+
+<div id="tab-content">
+    {% include tab_template %}
 </div>
 {% endblock %}

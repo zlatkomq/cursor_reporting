@@ -1,0 +1,24 @@
+<h3 class="funnel-table-title">Recent Projects in {{ stage_details.stage|title }}</h3>
+<table class="funnel-table" style="width:100%; border-collapse:collapse;">
+    <thead>
+        <tr>
+            <th>Spec ID</th>
+            <th>Status</th>
+            <th>Time in Stage</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for project in stage_details.projects %}
+        <tr>
+            <td><span class="funnel-spec-id">SPEC-{{ project.spec_id }}</span></td>
+            <td><span class="funnel-status-badge funnel-badge-{{ project.status|replace('_', '-') }}">{{ project.status|replace('_', ' ')|title }}</span></td>
+            <td>
+                {% set days_in_stage = ((now - project.entered_stage_at).total_seconds() / 86400) | round(1) %}
+                {{ days_in_stage }} days
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="3" style="text-align:center; color:var(--text-secondary); padding:24px;">No projects in this stage</td></tr>
+        {% endfor %}
+    </tbody>
+</table>

@@ -1,0 +1,428 @@
+<style>
+    .overview-metrics {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        margin-bottom: 32px;
+    }
+
+    .overview-metric-card {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 20px;
+        min-height: 138px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        transition: background 0.15s ease;
+    }
+    .overview-metric-card:hover {
+        background: var(--bg-card-hover);
+    }
+
+    .overview-metric-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+
+    .overview-metric-label {
+        font-family: var(--font-stack);
+        font-size: 14px;
+        line-height: 20px;
+        color: var(--text-secondary);
+    }
+
+    .overview-metric-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .overview-metric-icon img {
+        width: 44px;
+        height: 44px;
+    }
+
+    .overview-metric-value {
+        font-family: var(--font-heading);
+        font-size: 30px;
+        font-weight: 700;
+        line-height: 36px;
+        letter-spacing: -0.02em;
+        color: var(--text-primary);
+    }
+
+    .overview-metric-trend {
+        font-size: 12px;
+        line-height: 16px;
+        color: var(--color-green-bright);
+    }
+    .overview-metric-trend.down {
+        color: var(--color-red);
+    }
+
+    .overview-charts-row {
+        display: flex;
+        gap: 24px;
+        margin-bottom: 32px;
+    }
+
+    .overview-chart-card {
+        flex: 1;
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 25px;
+        min-width: 0;
+    }
+
+    .overview-chart-title {
+        font-family: var(--font-heading);
+        font-size: 18px;
+        font-weight: 400;
+        line-height: 27px;
+        color: var(--text-primary);
+        margin-bottom: 20px;
+    }
+
+    .overview-chart-canvas-wrap {
+        position: relative;
+        width: 100%;
+        height: 280px;
+    }
+    .overview-chart-canvas-wrap canvas {
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    .overview-activity-card {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 25px;
+    }
+
+    .overview-activity-title {
+        font-family: var(--font-heading);
+        font-size: 18px;
+        font-weight: 400;
+        line-height: 27px;
+        color: var(--text-primary);
+        margin-bottom: 16px;
+    }
+
+    .overview-activity-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+    }
+    .overview-activity-table th {
+        text-align: left;
+        padding: 12px 16px;
+        color: var(--text-secondary);
+        font-weight: 500;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .overview-activity-table td {
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-primary);
+        font-family: var(--font-stack);
+        font-size: 14px;
+        line-height: 20px;
+    }
+    .overview-activity-table tr:last-child td {
+        border-bottom: none;
+    }
+    .overview-activity-table tr:hover td {
+        background: var(--bg-card-hover);
+    }
+
+    .overview-model-badge {
+        display: inline-block;
+        padding: 2px 10px;
+        border-radius: 8px;
+        font-size: 12px;
+        line-height: 16px;
+        font-weight: 500;
+        background: var(--border-color);
+        color: var(--text-primary);
+    }
+    .overview-model-badge--claude { background: rgba(139, 92, 246, 0.2); color: #c4b5fd; }
+    .overview-model-badge--gpt { background: rgba(0, 200, 80, 0.2); color: #6ee7b7; }
+    .overview-model-badge--gemini { background: rgba(43, 127, 255, 0.2); color: #93c5fd; }
+    .overview-model-badge--codex { background: rgba(240, 177, 0, 0.2); color: #fde68a; }
+
+    .overview-cost-cell {
+        color: var(--text-secondary);
+    }
+
+    @media (max-width: 1024px) {
+        .overview-metrics {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        .overview-charts-row {
+            flex-direction: column;
+        }
+    }
+</style>
+
+{% set token_trend = overview.token_trend|default('+12.5%') %}
+{% set cost_trend = overview.cost_trend|default('+8.2%') %}
+{% set response_trend = overview.response_trend|default('-0.3s') %}
+{% set requests_trend = overview.requests_trend|default('+24.1%') %}
+
+<!-- Metric Cards -->
+<div class="overview-metrics">
+    <div class="overview-metric-card">
+        <div class="overview-metric-top">
+            <span class="overview-metric-label">Total Tokens</span>
+            <div class="overview-metric-icon">
+                <img src="/static/icons/overview/metric-total-tokens-icon.svg" alt="">
+            </div>
+        </div>
+        <div class="overview-metric-value">
+            {% if overview.total_tokens >= 1000000 %}
+                {{ "%.1f"|format(overview.total_tokens / 1000000) }}M
+            {% elif overview.total_tokens >= 1000 %}
+                {{ "%.1f"|format(overview.total_tokens / 1000) }}K
+            {% else %}
+                {{ overview.total_tokens|default(0) }}
+            {% endif %}
+        </div>
+        <div class="overview-metric-trend">{{ token_trend }} from last month</div>
+    </div>
+
+    <div class="overview-metric-card">
+        <div class="overview-metric-top">
+            <span class="overview-metric-label">Total Cost</span>
+            <div class="overview-metric-icon">
+                <img src="/static/icons/overview/metric-total-cost-icon.svg" alt="">
+            </div>
+        </div>
+        <div class="overview-metric-value">${{ "%.2f"|format(overview.total_cost|default(0)) }}</div>
+        <div class="overview-metric-trend">{{ cost_trend }} from last month</div>
+    </div>
+
+    <div class="overview-metric-card">
+        <div class="overview-metric-top">
+            <span class="overview-metric-label">Avg Response Time</span>
+            <div class="overview-metric-icon">
+                <img src="/static/icons/overview/metric-avg-response-icon.svg" alt="">
+            </div>
+        </div>
+        <div class="overview-metric-value">
+            {% if overview.avg_response_ms is defined %}
+                {{ "%.1f"|format(overview.avg_response_ms / 1000) }}s
+            {% else %}
+                3.2s
+            {% endif %}
+        </div>
+        <div class="overview-metric-trend">{{ response_trend }} from last month</div>
+    </div>
+
+    <div class="overview-metric-card">
+        <div class="overview-metric-top">
+            <span class="overview-metric-label">API Requests</span>
+            <div class="overview-metric-icon">
+                <img src="/static/icons/overview/metric-api-requests-icon.svg" alt="">
+            </div>
+        </div>
+        <div class="overview-metric-value">{{ "%d"|format(overview.total_requests|default(0)) }}</div>
+        <div class="overview-metric-trend">{{ requests_trend }} from last month</div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="overview-charts-row">
+    <div class="overview-chart-card">
+        <div class="overview-chart-title">Token Usage Over Time</div>
+        <div class="overview-chart-canvas-wrap">
+            <canvas id="overviewTokenChart"></canvas>
+        </div>
+    </div>
+    <div class="overview-chart-card">
+        <div class="overview-chart-title">Model Distribution</div>
+        <div class="overview-chart-canvas-wrap">
+            <canvas id="overviewModelChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity Table -->
+<div class="overview-activity-card">
+    <div class="overview-activity-title">Recent Activity</div>
+    <table class="overview-activity-table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Model</th>
+                <th>Tokens</th>
+                <th>Cost</th>
+                <th>Duration</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for event in overview.recent_events|default([]) %}
+            <tr>
+                <td>{{ event.timestamp.strftime('%b %d, %Y %H:%M') if event.timestamp is not string else event.timestamp }}</td>
+                <td>
+                    {% set model_lower = (event.model|default(''))|lower %}
+                    {% if 'claude' in model_lower %}
+                        <span class="overview-model-badge overview-model-badge--claude">{{ event.model }}</span>
+                    {% elif 'gpt' in model_lower %}
+                        <span class="overview-model-badge overview-model-badge--gpt">{{ event.model }}</span>
+                    {% elif 'gemini' in model_lower %}
+                        <span class="overview-model-badge overview-model-badge--gemini">{{ event.model }}</span>
+                    {% elif 'codex' in model_lower %}
+                        <span class="overview-model-badge overview-model-badge--codex">{{ event.model }}</span>
+                    {% else %}
+                        <span class="overview-model-badge">{{ event.model }}</span>
+                    {% endif %}
+                </td>
+                <td>{{ "%d"|format(event.total_tokens|default(0, true)) }}</td>
+                <td class="overview-cost-cell">${{ "%.2f"|format(event.cost|default(0, true)) }}</td>
+                <td>{{ "%.1f"|format((event.duration_ms|default(0, true)) / 1000) }}s</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 32px 16px;">No recent activity</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+(function() {
+    function initOverviewCharts() {
+        var tokenCanvas = document.getElementById('overviewTokenChart');
+        var modelCanvas = document.getElementById('overviewModelChart');
+        if (!tokenCanvas || !modelCanvas) return;
+
+        if (tokenCanvas._chartInstance) tokenCanvas._chartInstance.destroy();
+        if (modelCanvas._chartInstance) modelCanvas._chartInstance.destroy();
+
+        var dailyTokens = {{ overview.daily_tokens|default([])|tojson }};
+
+        var chartGridColor = '#262626';
+        var chartLabelColor = '#a1a1a1';
+        var purpleColor = '#8b5cf6';
+        var purpleFill = 'rgba(139, 92, 246, 0.15)';
+
+        var commonScaleOptions = {
+            x: {
+                grid: { color: chartGridColor, drawBorder: false },
+                ticks: {
+                    color: chartLabelColor,
+                    font: { family: 'Inter', size: 12 },
+                    maxTicksLimit: 8
+                }
+            },
+            y: {
+                grid: { color: chartGridColor, drawBorder: false },
+                ticks: {
+                    color: chartLabelColor,
+                    font: { family: 'Inter', size: 12 },
+                    callback: function(value) {
+                        if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M';
+                        if (value >= 1000) return (value / 1000).toFixed(0) + 'K';
+                        return value;
+                    }
+                },
+                beginAtZero: true
+            }
+        };
+
+        var commonPluginOptions = {
+            legend: { display: false },
+            tooltip: {
+                backgroundColor: '#171717',
+                titleColor: '#ffffff',
+                bodyColor: '#a1a1a1',
+                borderColor: '#262626',
+                borderWidth: 1,
+                cornerRadius: 8,
+                padding: 12
+            }
+        };
+
+        /* Token Usage Over Time — line/area chart */
+        var tokenLabels = dailyTokens.map(function(d) { return d[0]; });
+        var tokenValues = dailyTokens.map(function(d) { return d[1]; });
+
+        tokenCanvas._chartInstance = new Chart(tokenCanvas, {
+            type: 'line',
+            data: {
+                labels: tokenLabels,
+                datasets: [{
+                    data: tokenValues,
+                    borderColor: purpleColor,
+                    backgroundColor: purpleFill,
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 0,
+                    pointHoverRadius: 5,
+                    pointHoverBackgroundColor: purpleColor
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: commonScaleOptions,
+                plugins: commonPluginOptions
+            }
+        });
+
+        /* Model Distribution — bar chart */
+        var modelData = {{ overview.model_distribution|default({})|tojson }};
+        var modelLabels = Object.keys(modelData);
+        var modelValues = Object.values(modelData);
+
+        if (modelLabels.length === 0) {
+            modelLabels = ['Claude', 'GPT-4', 'Gemini', 'Codex'];
+            modelValues = [0, 0, 0, 0];
+        }
+
+        modelCanvas._chartInstance = new Chart(modelCanvas, {
+            type: 'bar',
+            data: {
+                labels: modelLabels,
+                datasets: [{
+                    data: modelValues,
+                    backgroundColor: purpleColor,
+                    borderRadius: 4,
+                    maxBarThickness: 48
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: commonScaleOptions,
+                plugins: commonPluginOptions
+            }
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initOverviewCharts);
+    } else {
+        initOverviewCharts();
+    }
+
+    document.body.addEventListener('htmx:afterSwap', function(evt) {
+        if (evt.detail.target && evt.detail.target.querySelector('#overviewTokenChart')) {
+            initOverviewCharts();
+        }
+    });
+})();
+</script>

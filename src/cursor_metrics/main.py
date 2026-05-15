@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import structlog
 from fastapi import FastAPI
 from sqlalchemy import text
+from starlette.staticfiles import StaticFiles
 
 from cursor_metrics.config import get_settings
 from cursor_metrics.database import async_engine
@@ -24,6 +27,10 @@ app.include_router(auth_router)
 app.include_router(dashboard_router)
 app.include_router(ingest_router)
 app.include_router(reports_router)
+
+static_dir = Path(__file__).parent / "static"
+static_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 
 @app.get("/", response_model=HealthCheckResponse)
