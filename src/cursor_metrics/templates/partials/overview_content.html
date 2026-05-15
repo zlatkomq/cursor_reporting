@@ -161,6 +161,21 @@
     .overview-model-badge--gemini { background: rgba(43, 127, 255, 0.2); color: #93c5fd; }
     .overview-model-badge--codex { background: rgba(240, 177, 0, 0.2); color: #fde68a; }
 
+    .model-tier {
+        display: inline-block;
+        padding: 1px 6px;
+        border-radius: 4px;
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-left: 6px;
+        vertical-align: middle;
+    }
+    .model-tier--low { background: rgba(0, 200, 80, 0.15); color: #6ee7b7; }
+    .model-tier--medium { background: rgba(240, 177, 0, 0.15); color: #fde68a; }
+    .model-tier--hard { background: rgba(239, 68, 68, 0.15); color: #fca5a5; }
+
     .overview-cost-cell {
         color: var(--text-secondary);
     }
@@ -174,6 +189,28 @@
         }
     }
 </style>
+
+{% macro model_tier(model_name) -%}
+    {%- set m = model_name|lower -%}
+    {%- if 'opus' in m or ('o3' in m and 'mini' not in m) or 'gpt-5.5' in m -%}
+        <span class="model-tier model-tier--hard">hard</span>
+    {%- elif 'sonnet' in m or ('gpt-4o' in m and 'mini' not in m) or ('gpt-4.1' in m and 'mini' not in m and 'nano' not in m) or 'o4-mini' in m or 'o3-mini' in m or 'codex' in m -%}
+        <span class="model-tier model-tier--medium">medium</span>
+    {%- else -%}
+        <span class="model-tier model-tier--low">low</span>
+    {%- endif -%}
+{%- endmacro %}
+
+{% macro format_tokens(count) -%}
+    {%- set val = count|default(0, true) -%}
+    {%- if val >= 1000000 -%}
+        {{ "%.1f"|format(val / 1000000) }}M
+    {%- elif val >= 1000 -%}
+        {{ "%.1f"|format(val / 1000) }}K
+    {%- else -%}
+        {{ val }}
+    {%- endif -%}
+{%- endmacro %}
 
 {% set token_trend = overview.token_trend|default('+12.5%') %}
 {% set cost_trend = overview.cost_trend|default('+8.2%') %}
@@ -287,8 +324,9 @@
                     {% else %}
                         <span class="overview-model-badge">{{ event.model }}</span>
                     {% endif %}
+                    {{ model_tier(event.model|default('')) }}
                 </td>
-                <td>{{ "%d"|format(event.total_tokens|default(0, true)) }}</td>
+                <td>{{ format_tokens(event.total_tokens) }}</td>
                 <td class="overview-cost-cell">${{ "%.2f"|format(event.cost|default(0, true)) }}</td>
                 <td>{{ "%.1f"|format((event.duration_ms|default(0, true)) / 1000) }}s</td>
             </tr>

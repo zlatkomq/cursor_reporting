@@ -88,6 +88,22 @@ async def dashboard(
             return templates.TemplateResponse(request, "partials/funnel_content.html", context=context)
         return templates.TemplateResponse(request, "dashboard.html", context=context)
 
+    if tab == "developers":
+        service = _build_metrics_service(session)
+        dev_data = await service.get_by_developer(days=30)
+
+        context = {
+            "request": request,
+            "current_user": current_user,
+            "developers": dev_data["developers"],
+            "active_tab": "developers",
+            "tab_template": "partials/developers_content.html",
+        }
+
+        if _is_htmx(request):
+            return templates.TemplateResponse(request, "partials/developers_content.html", context=context)
+        return templates.TemplateResponse(request, "dashboard.html", context=context)
+
     overview = await _get_overview_data(session)
 
     context = {
@@ -143,6 +159,25 @@ async def dashboard_funnel(
     return templates.TemplateResponse(request, "partials/funnel_content.html", context=context)
 
 
+@router.get("/dashboard/developers", response_class=HTMLResponse)
+async def dashboard_developers(
+    request: Request,
+    current_user: str = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> HTMLResponse:
+    """HTMX partial endpoint for the developers tab."""
+    service = _build_metrics_service(session)
+    dev_data = await service.get_by_developer(days=30)
+
+    context = {
+        "request": request,
+        "current_user": current_user,
+        "developers": dev_data["developers"],
+        "active_tab": "developers",
+    }
+    return templates.TemplateResponse(request, "partials/developers_content.html", context=context)
+
+
 @router.get("/dashboard/funnel-projects", response_class=HTMLResponse)
 async def dashboard_funnel_projects(
     request: Request,
@@ -171,8 +206,8 @@ async def redirect_by_model() -> RedirectResponse:
 
 @router.get("/dashboard/by-developer")
 async def redirect_by_developer() -> RedirectResponse:
-    """Redirect legacy by-developer route to the main dashboard."""
-    return RedirectResponse(url="/dashboard", status_code=302)
+    """Redirect legacy by-developer route to the developers tab."""
+    return RedirectResponse(url="/dashboard?tab=developers", status_code=302)
 
 
 @router.get("/dashboard/by-command")

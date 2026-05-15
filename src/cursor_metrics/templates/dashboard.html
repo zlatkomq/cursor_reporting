@@ -6,44 +6,42 @@
 <style>
     .tab-bar {
         display: flex;
-        gap: 0;
-        border-bottom: 1px solid var(--border-color);
+        gap: 8px;
         margin-bottom: 28px;
-        background: var(--bg-card);
-        border-radius: 8px 8px 0 0;
-        padding: 0 8px;
+        padding: 0;
     }
 
     .tab {
-        position: relative;
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        padding: 14px 20px;
-        background: none;
-        border: none;
-        border-bottom: 2px solid transparent;
-        color: var(--text-muted);
+        padding: 10px 20px;
+        background: var(--border-color);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        color: var(--text-secondary);
         font-family: var(--font-stack);
         font-size: 14px;
         font-weight: 500;
         cursor: pointer;
-        transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+        transition: all 0.15s ease;
         white-space: nowrap;
     }
 
     .tab:hover {
-        color: var(--text-secondary);
-        background: rgba(255, 255, 255, 0.03);
+        color: var(--text-primary);
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.15);
     }
 
     .tab.active {
-        color: var(--text-primary);
-        border-bottom-color: var(--accent-blue);
+        color: var(--color-bg-active, #171717);
+        background: var(--color-surface, #fafafa);
+        border-color: var(--color-surface, #fafafa);
     }
 
     .tab.active:hover {
-        background: none;
+        background: var(--color-surface, #fafafa);
     }
 </style>
 {% endblock %}
@@ -53,18 +51,27 @@
     <h1>Dashboard</h1>
 </div>
 
-<div class="tab-bar">
+<div class="tab-bar" id="tab-bar">
     <button class="tab {% if active_tab == 'overview' %}active{% endif %}"
             hx-get="/dashboard/overview"
             hx-target="#tab-content"
-            hx-push-url="/dashboard?tab=overview">
+            hx-push-url="/dashboard?tab=overview"
+            onclick="document.querySelectorAll('#tab-bar .tab').forEach(t=>t.classList.remove('active'));this.classList.add('active')">
         Overview
     </button>
     <button class="tab {% if active_tab == 'funnel' %}active{% endif %}"
             hx-get="/dashboard/funnel"
             hx-target="#tab-content"
-            hx-push-url="/dashboard?tab=funnel">
+            hx-push-url="/dashboard?tab=funnel"
+            onclick="document.querySelectorAll('#tab-bar .tab').forEach(t=>t.classList.remove('active'));this.classList.add('active')">
         Workflow Funnel
+    </button>
+    <button class="tab {% if active_tab == 'developers' %}active{% endif %}"
+            hx-get="/dashboard/developers"
+            hx-target="#tab-content"
+            hx-push-url="/dashboard?tab=developers"
+            onclick="document.querySelectorAll('#tab-bar .tab').forEach(t=>t.classList.remove('active'));this.classList.add('active')">
+        By Developer
     </button>
 </div>
 
