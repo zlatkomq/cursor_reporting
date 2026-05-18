@@ -1,0 +1,39 @@
+---
+include:
+  - project: devops/ci-cd
+    file:
+      # BEGIN: overridden CI/CD includes
+      - common/.global-default-attributes-template.yaml
+      # END: overridden CI/CD includes
+
+# Override inherited defaults
+variables:
+  ECR_REPOSITORY: "q-ai-cursor-report-${ENVIRONMENT}-${SERVICE}"
+
+package:
+  stage: package
+  image: docker:23.0.3-alpine3.17
+  resource_group: "${ENVIRONMENT}"
+  before_script:
+    # Install OS packages
+    - apk add -q --no-cache aws-cli
+    # AWS container registry login
+    - aws ecr get-login-password | docker login --username AWS --password-stdin "${ECR_REGISTRY}"
+  script:
+    # Application container
+    - >-
+      docker buildx build --pull
+      --tag ${IMAGE_TAG}:${IMAGE_LABEL}
+      --tag ${IMAGE_TAG}:latest
+      --file .aws/Dockerfile .
+    # Push containers
+    - docker push -a ${IMAGE_TAG}
+  rules:
+    - if: $CI_COMMIT_BRANCH == "devpipeline"
+      variables:
+        ENVIRONMENT: dev
+    - if: $CI_COMMIT_BRANCH == "master"
+      variables:
+        ENVIRONMENT: prod
+  tags:
+    - docker-small
