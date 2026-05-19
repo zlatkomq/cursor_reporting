@@ -79,7 +79,7 @@ deploy:
           echo "${NEW_TASK_DEFINITION}" \
             | jq \
             --argjson INDEX ${INDEX} \
-            --arg IMAGE_URI "${IMAGE_TAG}:${CURRENT_TASK_DEFINITION_CONTAINERS[${INDEX}]}-${IMAGE_LABEL}" \
+            --arg IMAGE_URI "${IMAGE_TAG}:${IMAGE_LABEL}" \
             '.taskDefinition.containerDefinitions[$INDEX].image = $IMAGE_URI'
         )
       done
