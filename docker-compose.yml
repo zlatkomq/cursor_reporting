@@ -2,7 +2,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: .aws/Dockerfile
+      dockerfile: Dockerfile
     ports:
       - "8000:8000"
     env_file:
