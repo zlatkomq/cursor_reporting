@@ -41,6 +41,7 @@ class PricingService:
         input_tokens: int | None = None,
         output_tokens: int | None = None,
         cache_read_tokens: int | None = None,
+        cache_write_tokens: int | None = None,
     ) -> Decimal:
         """Estimate cost for *model* using real token counts when available.
 
@@ -53,10 +54,14 @@ class PricingService:
         cost_in, cost_out, cost_cache = pricing_map[model]
 
         if input_tokens is not None:
+            cached_tokens = Decimal((cache_read_tokens or 0) + (cache_write_tokens or 0))
+            billable_input_tokens = max(Decimal(input_tokens) - cached_tokens, Decimal(0))
+            cache_write_rate = cost_in * Decimal("1.25") if "claude" in model.lower() else cost_in
             return (
-                Decimal(input_tokens) * cost_in
+                billable_input_tokens * cost_in
                 + Decimal(output_tokens or 0) * cost_out
                 + Decimal(cache_read_tokens or 0) * cost_cache
+                + Decimal(cache_write_tokens or 0) * cache_write_rate
             )
 
         return event_count * (cost_in + cost_out) * _TOKENS_PER_EVENT

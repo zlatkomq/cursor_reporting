@@ -1,0 +1,477 @@
+<style>
+    .funnel-layout {
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+    }
+
+    .funnel-main-row {
+        display: flex;
+        gap: 24px;
+    }
+
+    .funnel-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 24px;
+    }
+
+    .funnel-card-title {
+        font-family: var(--font-heading);
+        font-size: 18px;
+        font-weight: 400;
+        line-height: 27px;
+        color: var(--text-primary);
+        margin-bottom: 4px;
+    }
+
+    .funnel-card-subtitle {
+        font-size: 14px;
+        line-height: 20px;
+        color: var(--text-secondary);
+        margin-bottom: 24px;
+    }
+
+    .funnel-viz {
+        flex: 0 0 65%;
+        min-width: 0;
+    }
+
+    .funnel-selector {
+        flex: 0 0 35%;
+        min-width: 0;
+    }
+
+    /* Funnel bars */
+    .funnel-bars {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .funnel-stage {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .funnel-stage-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 4px;
+        font-size: 12px;
+        line-height: 16px;
+    }
+
+    .funnel-stage-arrow {
+        color: var(--text-secondary);
+    }
+
+    .funnel-stage-pct {
+        color: var(--text-secondary);
+        font-size: 14px;
+        font-weight: 700;
+        font-family: var(--font-heading);
+    }
+
+    .funnel-bar-container {
+        display: flex;
+        width: 100%;
+        height: 48px;
+        border-radius: 6px;
+        overflow: hidden;
+        background: var(--color-border);
+    }
+
+    .funnel-bar-fill {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding: 0 12px;
+        min-width: 40px;
+        border-radius: 6px 0 0 6px;
+        transition: width 0.4s ease;
+    }
+
+    .funnel-bar-fill.funnel-full {
+        border-radius: 6px;
+    }
+
+    .funnel-bar-count {
+        font-family: var(--font-heading);
+        font-size: 14px;
+        font-weight: 700;
+        line-height: 20px;
+        color: var(--color-white);
+    }
+
+    .funnel-bar-label {
+        font-size: 14px;
+        line-height: 20px;
+        color: var(--text-secondary);
+        margin-top: 2px;
+    }
+
+    .funnel-dropoff {
+        font-size: 12px;
+        line-height: 16px;
+        color: var(--color-red);
+        margin-top: 4px;
+    }
+
+    /* Stage colors */
+    .funnel-bar-spec       { background: var(--color-purple-funnel); }
+    .funnel-bar-design     { background: var(--color-blue); }
+    .funnel-bar-uix        { background: var(--color-blue-light); }
+    .funnel-bar-tasks      { background: var(--color-cyan); }
+    .funnel-bar-implement  { background: var(--color-green); }
+    .funnel-bar-review     { background: var(--color-amber); }
+
+    /* Conversion rate */
+    .funnel-conversion {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 24px;
+        padding-top: 16px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .funnel-conversion-label {
+        font-size: 14px;
+        line-height: 20px;
+        color: var(--text-primary);
+    }
+
+    .funnel-conversion-sub {
+        font-size: 12px;
+        line-height: 16px;
+        color: var(--text-secondary);
+        margin-top: 2px;
+    }
+
+    .funnel-conversion-value {
+        font-family: var(--font-heading);
+        font-size: 20px;
+        font-weight: 700;
+        line-height: 28px;
+        color: var(--color-green-bright);
+    }
+
+    /* Stage selector buttons */
+    .funnel-stage-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .funnel-stage-btn {
+        display: block;
+        width: 100%;
+        padding: 12px 16px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-card);
+        color: var(--text-secondary);
+        font-family: var(--font-stack);
+        font-size: 16px;
+        line-height: 24px;
+        cursor: pointer;
+        text-align: left;
+        transition: background 0.15s ease, color 0.15s ease;
+    }
+
+    .funnel-stage-btn:hover {
+        background: var(--bg-card-hover);
+        color: var(--text-primary);
+    }
+
+    .funnel-stage-btn.active {
+        background: var(--color-surface);
+        color: var(--color-bg-active);
+        border-color: var(--color-surface);
+        font-weight: 700;
+    }
+
+    /* Stat cards row */
+    .funnel-stats-row {
+        display: flex;
+        gap: 20px;
+    }
+
+    .funnel-stat-card {
+        flex: 1;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 24px;
+    }
+
+    .funnel-stat-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+
+    .funnel-stat-icon {
+        width: 44px;
+        height: 44px;
+    }
+
+    .funnel-stat-label {
+        font-size: 14px;
+        line-height: 20px;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .funnel-stat-value {
+        font-family: var(--font-heading);
+        font-size: 30px;
+        font-weight: 700;
+        line-height: 36px;
+        color: var(--text-primary);
+    }
+
+    .funnel-stat-value.funnel-stat-blocked {
+        color: var(--color-red);
+    }
+
+    .funnel-stat-sub {
+        font-size: 12px;
+        line-height: 16px;
+        color: var(--text-secondary);
+        margin-top: 4px;
+    }
+
+    /* Projects table */
+    .funnel-table-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 24px;
+    }
+
+    .funnel-table-title {
+        font-family: var(--font-heading);
+        font-size: 18px;
+        font-weight: 400;
+        line-height: 27px;
+        color: var(--text-primary);
+        margin-bottom: 16px;
+    }
+
+    .funnel-spec-id {
+        font-family: 'Liberation Mono', monospace;
+        font-size: 12px;
+        line-height: 16px;
+    }
+
+    .funnel-status-badge {
+        display: inline-block;
+        padding: 2px 10px;
+        border-radius: 8px;
+        font-size: 12px;
+        line-height: 16px;
+        font-weight: 400;
+    }
+
+    .funnel-badge-in-progress {
+        background: var(--color-blue);
+        color: var(--color-blue-light);
+    }
+    .funnel-badge-review {
+        background: var(--color-amber);
+        color: var(--color-amber-light);
+    }
+    .funnel-badge-draft {
+        background: var(--color-border);
+        color: var(--text-secondary);
+    }
+    .funnel-badge-approved {
+        background: var(--color-green);
+        color: var(--color-white);
+    }
+    .funnel-badge-blocked {
+        background: var(--color-red);
+        color: var(--color-white);
+    }
+
+    .funnel-empty-row td {
+        text-align: center;
+        color: var(--text-secondary);
+        padding: 32px 16px;
+    }
+
+    @media (max-width: 1024px) {
+        .funnel-main-row {
+            flex-direction: column;
+        }
+        .funnel-viz,
+        .funnel-selector {
+            flex: 1 1 auto;
+        }
+        .funnel-stats-row {
+            flex-direction: column;
+        }
+    }
+</style>
+
+<div class="funnel-layout">
+    <!-- Main row: funnel visualization + stage selector -->
+    <div class="funnel-main-row">
+        <!-- Funnel visualization card -->
+        <div class="funnel-card funnel-viz">
+            <div class="funnel-card-title">Workflow Funnel</div>
+            <div class="funnel-card-subtitle">Track projects through your framework stages</div>
+
+            <div class="funnel-bars">
+                {% for item in funnel.funnel %}
+                {% set stage_colors = {
+                    'spec': 'funnel-bar-spec',
+                    'design': 'funnel-bar-design',
+                    'uix': 'funnel-bar-uix',
+                    'tasks': 'funnel-bar-tasks',
+                    'implement': 'funnel-bar-implement',
+                    'review': 'funnel-bar-review'
+                } %}
+
+                <div class="funnel-stage">
+                    {% if not loop.first %}
+                    <div class="funnel-stage-meta">
+                        <span class="funnel-stage-arrow">→</span>
+                        <span class="funnel-stage-pct">{{ item.percentage|round(0)|int }}%</span>
+                    </div>
+                    {% endif %}
+
+                    <div class="funnel-bar-label">{{ item.stage|title }}</div>
+                    <div class="funnel-bar-container">
+                        <div class="funnel-bar-fill {{ stage_colors[item.stage] }}{% if item.percentage >= 100 %} funnel-full{% endif %}"
+                             style="width: {{ [item.percentage, 5]|max }}%">
+                            <span class="funnel-bar-count">{{ item.count }}</span>
+                        </div>
+                    </div>
+
+                    {% if not loop.last %}
+                    {% set next_item = funnel.funnel[loop.index] %}
+                    {% set dropoff = item.count - next_item.count %}
+                    {% if dropoff > 0 %}
+                    <div class="funnel-dropoff">−{{ dropoff }} drop-off</div>
+                    {% endif %}
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Conversion rate -->
+            {% if funnel.funnel|length >= 2 %}
+            {% set first_count = funnel.funnel[0].count %}
+            {% set last_count = funnel.funnel[-1].count %}
+            {% set conversion = (last_count / first_count * 100)|round(0)|int if first_count > 0 else 0 %}
+            <div class="funnel-conversion">
+                <div>
+                    <div class="funnel-conversion-label">Overall Conversion Rate</div>
+                    <div class="funnel-conversion-sub">{{ last_count }} of {{ first_count }} projects successfully completed</div>
+                </div>
+                <div class="funnel-conversion-value">{{ conversion }}%</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Stage selector card -->
+        <div class="funnel-card funnel-selector">
+            <div class="funnel-card-title">Select Stage</div>
+            <div class="funnel-stage-list" style="margin-top: 16px;">
+                {% set stages = ['spec', 'design', 'uix', 'tasks', 'implement', 'review'] %}
+                {% for s in stages %}
+                <button class="funnel-stage-btn{% if stage_details.stage == s %} active{% endif %}"
+                        hx-get="/dashboard/funnel-projects?stage={{ s }}"
+                        hx-target="#funnel-projects"
+                        hx-swap="innerHTML">
+                    {{ s|title }}
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Stat cards row -->
+    <div class="funnel-stats-row">
+        <div class="funnel-stat-card">
+            <div class="funnel-stat-header">
+                <img class="funnel-stat-icon" src="/static/icons/funnel/stat-active-projects-icon.svg" alt="">
+                <span class="funnel-stat-label">Active Projects</span>
+            </div>
+            <div class="funnel-stat-value">{{ stage_details.active_count }}</div>
+            <div class="funnel-stat-sub">of {{ funnel.total_projects }} total</div>
+        </div>
+
+        <div class="funnel-stat-card">
+            <div class="funnel-stat-header">
+                <img class="funnel-stat-icon" src="/static/icons/funnel/stat-avg-time-icon.svg" alt="">
+                <span class="funnel-stat-label">Avg Time in Stage</span>
+            </div>
+            <div class="funnel-stat-value">{{ stage_details.avg_days|default(0)|round(1) }} days</div>
+        </div>
+
+        <div class="funnel-stat-card">
+            <div class="funnel-stat-header">
+                <img class="funnel-stat-icon" src="/static/icons/funnel/stat-blocked-icon.svg" alt="">
+                <span class="funnel-stat-label">Blocked</span>
+            </div>
+            <div class="funnel-stat-value funnel-stat-blocked">{{ funnel.blocked_count }}</div>
+            <div class="funnel-stat-sub">requiring attention</div>
+        </div>
+    </div>
+
+    <!-- Projects table -->
+    <div class="funnel-table-card">
+        <div class="funnel-table-title">Recent Projects in {{ stage_details.stage|title }}</div>
+        <div id="funnel-projects">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Spec ID</th>
+                        <th>Status</th>
+                        <th>Time in Stage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for project in stage_details.projects %}
+                    {% set status_lower = project.status|lower|replace(' ', '-') %}
+                    {% set badge_class = {
+                        'in-progress': 'funnel-badge-in-progress',
+                        'review': 'funnel-badge-review',
+                        'draft': 'funnel-badge-draft',
+                        'approved': 'funnel-badge-approved',
+                        'blocked': 'funnel-badge-blocked'
+                    } %}
+                    <tr>
+                        <td class="funnel-spec-id">{{ project.spec_id }}</td>
+                        <td>
+                            <span class="funnel-status-badge {{ badge_class.get(status_lower, 'funnel-badge-draft') }}">
+                                {{ project.status }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if project.entered_stage_at %}
+                            {{ ((now - project.entered_stage_at).total_seconds() / 86400)|round(1) }} days
+                            {% else %}
+                            —
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr class="funnel-empty-row">
+                        <td colspan="3">No projects in this stage</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

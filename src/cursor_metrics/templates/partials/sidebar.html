@@ -7,42 +7,15 @@
     </div>
 
     <nav class="sidebar-nav">
-        <div class="nav-section">
-            <span class="nav-section-label">Dashboard</span>
-            <a href="/dashboard" class="nav-link{% if request.url.path == '/dashboard' %} active{% endif %}">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="3" width="7" height="7"/>
-                    <rect x="14" y="3" width="7" height="7"/>
-                    <rect x="3" y="14" width="7" height="7"/>
-                    <rect x="14" y="14" width="7" height="7"/>
-                </svg>
-                <span class="nav-label">Overview</span>
-            </a>
-            <a href="/dashboard/by-developer" class="nav-link{% if request.url.path == '/dashboard/by-developer' %} active{% endif %}">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                    <circle cx="9" cy="7" r="4"/>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                </svg>
-                <span class="nav-label">By Developer</span>
-            </a>
-            <a href="/dashboard/by-model" class="nav-link{% if request.url.path == '/dashboard/by-model' %} active{% endif %}">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-                    <line x1="8" y1="21" x2="16" y2="21"/>
-                    <line x1="12" y1="17" x2="12" y2="21"/>
-                </svg>
-                <span class="nav-label">By Model</span>
-            </a>
-            <a href="/dashboard/by-command" class="nav-link{% if request.url.path == '/dashboard/by-command' %} active{% endif %}">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="4 17 10 11 4 5"/>
-                    <line x1="12" y1="19" x2="20" y2="19"/>
-                </svg>
-                <span class="nav-label">By Command</span>
-            </a>
-        </div>
+        <a href="/dashboard" class="nav-link{% if request.url.path.startswith('/dashboard') and request.url.path != '/dashboard/logout' %} active{% endif %}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7"/>
+                <rect x="14" y="3" width="7" height="7"/>
+                <rect x="3" y="14" width="7" height="7"/>
+                <rect x="14" y="14" width="7" height="7"/>
+            </svg>
+            <span class="nav-label">Dashboard</span>
+        </a>
     </nav>
 
     <div class="sidebar-footer">
@@ -72,26 +45,17 @@
             padding: 8px 12px;
             overflow-y: auto;
         }
-        .nav-section { margin-bottom: 16px; }
-        .nav-section-label {
-            display: block;
-            padding: 8px 12px 6px;
-            font-size: 11px;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            color: var(--text-muted);
-        }
         .nav-link {
             display: flex;
             align-items: center;
             gap: 10px;
             padding: 9px 12px;
             border-radius: 6px;
+            border-left: 3px solid transparent;
             color: var(--text-secondary);
             text-decoration: none;
             font-size: 14px;
-            transition: color 0.15s ease, background 0.15s ease;
+            transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
         }
         .nav-link:hover {
             color: var(--text-primary);
@@ -100,12 +64,14 @@
         .nav-link.active {
             color: var(--text-primary);
             background: var(--bg-card-hover);
+            border-left-color: var(--accent-blue);
         }
         .nav-link.active svg { stroke: var(--accent-blue); }
         .sidebar-footer {
             padding: 12px;
             border-top: 1px solid var(--border-color);
         }
+        .nav-logout { border-left: none; }
         .nav-logout:hover { color: var(--accent-amber); }
     </style>
 </aside>

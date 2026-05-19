@@ -1,0 +1,74 @@
+<style>
+    .dev-card {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 25px;
+    }
+    .dev-title {
+        font-family: var(--font-heading);
+        font-size: 18px;
+        font-weight: 400;
+        color: var(--text-primary);
+        margin-bottom: 16px;
+    }
+    .dev-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+    }
+    .dev-table th {
+        text-align: left;
+        padding: 12px 16px;
+        color: var(--text-secondary);
+        font-weight: 500;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .dev-table td {
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-primary);
+        font-size: 14px;
+    }
+    .dev-table tr:last-child td { border-bottom: none; }
+    .dev-table tr:hover td { background: var(--bg-card-hover); }
+    .dev-email { font-weight: 500; }
+    .dev-count { font-weight: 700; font-family: var(--font-heading); }
+    .dev-model { color: var(--accent-blue); }
+    .dev-rank { color: var(--text-secondary); font-size: 12px; }
+</style>
+
+<div class="dev-card">
+    <div class="dev-title">Usage by Developer</div>
+    {% if developers %}
+    <table class="dev-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Developer</th>
+                <th>Requests</th>
+                <th>Top Model</th>
+                <th>Avg Duration</th>
+                <th>Last Active</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for dev in developers %}
+            <tr>
+                <td class="dev-rank">{{ loop.index }}</td>
+                <td class="dev-email">{{ dev.email }}</td>
+                <td class="dev-count">{{ "%d"|format(dev.event_count|default(0, true)) }}</td>
+                <td><span class="dev-model">{{ dev.top_model|default('—') }}</span></td>
+                <td>{% if dev.avg_duration_ms %}{{ "%.1f"|format(dev.avg_duration_ms / 1000) }}s{% else %}—{% endif %}</td>
+                <td style="color: var(--text-secondary)">{% if dev.last_active %}{{ dev.last_active.strftime('%Y-%m-%d') }}{% else %}—{% endif %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="text-align: center; color: var(--text-secondary); padding: 32px 0;">No developer data for this period</p>
+    {% endif %}
+</div>

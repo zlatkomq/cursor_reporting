@@ -1,4 +1,4 @@
-"""ORM table definitions for metrics_events, model_pricing, and dashboard_users."""
+"""ORM table definitions for metrics_events, model_pricing, dashboard_users, and workflow_projects."""
 
 from __future__ import annotations
 
@@ -71,3 +71,23 @@ class DashboardUser(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now())
+
+
+class WorkflowProject(Base):
+    """Tracks projects through the spec-to-implementation workflow pipeline."""
+
+    __tablename__ = "workflow_projects"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    spec_id: Mapped[str] = mapped_column(String(20), unique=True, nullable=False)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    stage: Mapped[str] = mapped_column(String(50), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False)
+    entered_stage_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now())
+
+    __table_args__ = (
+        Index("ix_workflow_projects_stage", "stage"),
+        Index("ix_workflow_projects_status", "status"),
+    )

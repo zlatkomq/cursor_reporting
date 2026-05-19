@@ -148,6 +148,7 @@ class MetricsRepository:
                 func.coalesce(func.sum(MetricsEvent.input_tokens), 0).label("total_input_tokens"),
                 func.coalesce(func.sum(MetricsEvent.output_tokens), 0).label("total_output_tokens"),
                 func.coalesce(func.sum(MetricsEvent.cache_read_tokens), 0).label("total_cache_read_tokens"),
+                func.coalesce(func.sum(MetricsEvent.cache_write_tokens), 0).label("total_cache_write_tokens"),
             )
             .where(MetricsEvent.timestamp >= since)
             .group_by(MetricsEvent.model)
@@ -165,6 +166,7 @@ class MetricsRepository:
                 "total_input_tokens": row.total_input_tokens,
                 "total_output_tokens": row.total_output_tokens,
                 "total_cache_read_tokens": row.total_cache_read_tokens,
+                "total_cache_write_tokens": row.total_cache_write_tokens,
             }
             for row in result.all()
         ]
@@ -179,6 +181,26 @@ class MetricsRepository:
         )
         result = await self._session.execute(stmt)
         return [row[0] for row in result.all()]
+
+    async def recent_events(self, limit: int = 10) -> list[MetricsEvent]:
+        """Return the most recent MetricsEvent rows ordered by timestamp descending."""
+        stmt = select(MetricsEvent).order_by(MetricsEvent.timestamp.desc()).limit(limit)
+        result = await self._session.execute(stmt)
+        return list(result.scalars().all())
+
+    async def daily_token_counts(self, days: int = 30) -> list[tuple[str, int]]:
+        """Return (date_string, total_tokens) tuples for the last N days."""
+        from datetime import datetime, timedelta
+
+        since = datetime.utcnow() - timedelta(days=days)
+        day = func.date(MetricsEvent.timestamp).label("day")
+        total = func.coalesce(func.sum(MetricsEvent.input_tokens), 0) + func.coalesce(
+            func.sum(MetricsEvent.output_tokens), 0
+        )
+        total = total.label("total")
+        stmt = select(day, total).where(MetricsEvent.timestamp >= since).group_by(day).order_by(day)
+        result = await self._session.execute(stmt)
+        return [(str(row.day), int(row.total)) for row in result.all()]
 
     async def events_by_command(self, since: datetime) -> list[dict]:
         """Return per-command aggregates ordered by event count descending."""

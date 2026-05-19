@@ -1,0 +1,36 @@
+/* Figma Design Tokens — extracted from file YJ1zG32GEYfQcJHG6pFQtV */
+/* Use ONLY these values in generated code */
+
+:root {
+  --color-black: #000000;
+  --color-cyan: #00b8db;
+  --color-green: #00c950;
+  --color-green-bright: #05df72;
+  --color-bg-primary: #0a0a0a;
+  --color-bg-active: #171717;
+  --color-border: #262626;
+  --color-blue: #2b7fff;
+  --color-blue-light: #51a2ff;
+  --color-purple: #8b5cf6;
+  --color-text-secondary: #a1a1a1;
+  --color-purple-funnel: #ad46ff;
+  --color-amber: #f0b100;
+  --color-surface: #fafafa;
+  --color-amber-light: #fdc700;
+  --color-red: #ff6467;
+  --color-white: #ffffff;
+}
+
+/* Typography — Families: Arimo, Inter, Liberation Mono */
+/* Text Styles:
+   - Arimo 700 24px (headings)
+   - Arimo 700 30px (metric values)
+   - Arimo 700 20px (conversion rate)
+   - Arimo 700 14px (project counts)
+   - Arimo 400 18px (section headings)
+   - Arimo 400 16px (body text, buttons)
+   - Arimo 400 14px (labels, table cells)
+   - Arimo 400 12px (small labels, badges, drop-off)
+   - Inter 400 12px (chart axis labels)
+   - Liberation Mono 400 12px (spec IDs)
+*/

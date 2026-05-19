@@ -8,16 +8,16 @@ import sys
 from decimal import Decimal
 
 # Model pricing: (cost_per_input_token, cost_per_output_token, cost_per_cache_read_token)
-# Rates in USD per token. Source: provider pricing pages as of 2026-05.
+# Rates in USD per token. Source: Cursor model pricing docs.
 DEFAULT_PRICING: dict[str, tuple[Decimal, Decimal, Decimal]] = {
     # Anthropic Claude
-    "claude-opus-4-6": (Decimal("0.00001500"), Decimal("0.00007500"), Decimal("0.00000150")),
-    "claude-opus-4-5": (Decimal("0.00001500"), Decimal("0.00007500"), Decimal("0.00000150")),
+    "claude-opus-4-6": (Decimal("0.00000500"), Decimal("0.00002500"), Decimal("0.00000050")),
+    "claude-opus-4-5": (Decimal("0.00000500"), Decimal("0.00002500"), Decimal("0.00000050")),
     "claude-sonnet-4-5": (Decimal("0.00000300"), Decimal("0.00001500"), Decimal("0.00000030")),
     "claude-sonnet-4": (Decimal("0.00000300"), Decimal("0.00001500"), Decimal("0.00000030")),
     "claude-4.6-sonnet-medium-thinking": (Decimal("0.00000300"), Decimal("0.00001500"), Decimal("0.00000030")),
-    "claude-4.6-opus-high-thinking": (Decimal("0.00001500"), Decimal("0.00007500"), Decimal("0.00000150")),
-    "claude-opus-4-7-thinking-xhigh": (Decimal("0.00001500"), Decimal("0.00007500"), Decimal("0.00000150")),
+    "claude-4.6-opus-high-thinking": (Decimal("0.00000500"), Decimal("0.00002500"), Decimal("0.00000050")),
+    "claude-opus-4-7-thinking-xhigh": (Decimal("0.00000500"), Decimal("0.00002500"), Decimal("0.00000050")),
     # OpenAI
     "gpt-4o": (Decimal("0.00000250"), Decimal("0.00001000"), Decimal("0.00000125")),
     "gpt-4o-mini": (Decimal("0.00000015"), Decimal("0.00000060"), Decimal("0.00000008")),
@@ -27,8 +27,9 @@ DEFAULT_PRICING: dict[str, tuple[Decimal, Decimal, Decimal]] = {
     "o3": (Decimal("0.00001000"), Decimal("0.00004000"), Decimal("0.00000250")),
     "o3-mini": (Decimal("0.00000110"), Decimal("0.00000440"), Decimal("0.00000055")),
     "o4-mini": (Decimal("0.00000110"), Decimal("0.00000440"), Decimal("0.00000055")),
-    "gpt-5.3-codex": (Decimal("0.00000250"), Decimal("0.00001000"), Decimal("0.00000125")),
-    "gpt-5.5-medium": (Decimal("0.00000200"), Decimal("0.00000800"), Decimal("0.00000050")),
+    "gpt-5.3-codex": (Decimal("0.00000175"), Decimal("0.00001400"), Decimal("0.000000175")),
+    "gpt-5.5": (Decimal("0.00000500"), Decimal("0.00003000"), Decimal("0.00000050")),
+    "gpt-5.5-medium": (Decimal("0.00000500"), Decimal("0.00003000"), Decimal("0.00000050")),
     # Cursor built-in
     "cursor-small": (Decimal("0.00000010"), Decimal("0.00000010"), Decimal("0.00000001")),
 }

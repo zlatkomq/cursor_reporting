@@ -66,20 +66,18 @@ class TestSidebarPartial:
     def test_file_exists(self) -> None:
         assert (TEMPLATES_DIR / "partials" / "sidebar.html").is_file()
 
-    def test_contains_overview_link(self) -> None:
+    def test_contains_dashboard_link(self) -> None:
         content = (TEMPLATES_DIR / "partials" / "sidebar.html").read_text()
         assert "/dashboard" in content
-        assert "Overview" in content
+        assert "Dashboard" in content
 
-    def test_contains_by_developer_link(self) -> None:
+    def test_no_legacy_by_developer_link(self) -> None:
         content = (TEMPLATES_DIR / "partials" / "sidebar.html").read_text()
-        assert "/dashboard/by-developer" in content
-        assert "By Developer" in content
+        assert "By Developer" not in content
 
-    def test_contains_by_model_link(self) -> None:
+    def test_no_legacy_by_model_link(self) -> None:
         content = (TEMPLATES_DIR / "partials" / "sidebar.html").read_text()
-        assert "/dashboard/by-model" in content
-        assert "By Model" in content
+        assert "By Model" not in content
 
     def test_contains_logout_link(self) -> None:
         content = (TEMPLATES_DIR / "partials" / "sidebar.html").read_text()
