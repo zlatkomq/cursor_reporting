@@ -37,3 +37,97 @@ package:
         ENVIRONMENT: prod
   tags:
     - docker-small
+
+deploy:
+  image:
+    name: amazon/aws-cli
+    entrypoint: [""]
+
+  stage: deploy
+
+  variables:
+    ECS_ID: "Q-AI-cursor-report-${ENVIRONMENT}-${SERVICE}"
+    ECS_CLUSTER: "Q-AI-non-prod"
+
+  environment:
+    name: ${ENVIRONMENT}
+
+  resource_group: "${ENVIRONMENT}"
+
+  script:
+    - yum install -y jq
+    # Query the current AWS ECS Task Definition
+    - CURRENT_TASK_DEFINITION=$(aws ecs describe-task-definition --task-definition "${ECS_ID}" --region "${AWS_DEFAULT_REGION}")
+
+    # Query the container names from current AWS ECS Task Definition and assign them into a string array.
+    - |-
+      CURRENT_TASK_DEFINITION_CONTAINERS=(
+        $(
+          echo "${CURRENT_TASK_DEFINITION}" | \
+          jq --raw-output '.taskDefinition.containerDefinitions[].name'
+        )
+      )
+
+    # Prepare a new AWS ECS Task Definition with changes to container image(s) URI, by iterating
+    # over deployed container names (as declared in AWS ECS Task Definition and ordered in the array),
+    # and replacing the image tag/revision suffix with the current '${IMAGE_LABEL}' value.
+    - |-
+      NEW_TASK_DEFINITION="${CURRENT_TASK_DEFINITION}"
+      for INDEX in ${!CURRENT_TASK_DEFINITION_CONTAINERS[@]}
+      do
+        NEW_TASK_DEFINITION=$(
+          echo "${NEW_TASK_DEFINITION}" \
+            | jq \
+            --argjson INDEX ${INDEX} \
+            --arg IMAGE_URI "${IMAGE_TAG}:${CURRENT_TASK_DEFINITION_CONTAINERS[${INDEX}]}-${IMAGE_LABEL}" \
+            '.taskDefinition.containerDefinitions[$INDEX].image = $IMAGE_URI'
+        )
+      done
+
+    # Cleanup attributes that are not a part of the AWS ECS Task Definition registration (JSON) template
+    - |-
+      NEW_TASK_DEFINITION=$(
+        echo "${NEW_TASK_DEFINITION}" \
+        | jq \
+        '.taskDefinition
+          | del(.taskDefinitionArn) | del(.revision) | del(.status)
+          | del(.requiresAttributes) | del(.compatibilities)
+          | del(.registeredAt) | del(.registeredBy)
+        '
+      )
+
+
+    # Register the newest AWS ECS Task Definition (with updated container image tags)
+    - |-
+      NEW_TASK_REGISTRATION_INFO=$(
+        aws ecs register-task-definition \
+        --region "${AWS_DEFAULT_REGION}" \
+        --cli-input-json "${NEW_TASK_DEFINITION}" \
+      )
+
+    # Get the AWS ECS Task Definition revision number from the latest definition
+    - NEW_TASK_REGISTRATION_REVISION=$(echo ${NEW_TASK_REGISTRATION_INFO} | jq '.taskDefinition.revision')
+
+
+    # Update the currently running AWS ECS service to use the latest AWS ECS Task Definition revision
+    - |-
+      aws ecs update-service \
+      --cluster "${ECS_CLUSTER}" \
+      --service "${ECS_ID}" \
+      --task-definition "${ECS_ID}:${NEW_TASK_REGISTRATION_REVISION}" \
+      --force-new-deployment
+
+    # Wait for the deployment status of that service to become stable
+    - |-
+      aws ecs wait services-stable \
+      --cluster "${ECS_CLUSTER}" \
+      --services "${ECS_ID}"
+
+  rules:
+    - if: $CI_COMMIT_BRANCH == "devpipeline"
+      variables:
+        ENVIRONMENT: dev
+
+    - if: $CI_COMMIT_BRANCH == "master"
+      variables:
+        ENVIRONMENT: prod
