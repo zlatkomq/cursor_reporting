@@ -1,6 +1,10 @@
-# Cursor Metrics
+# Cursor Reporting (Cursor Metrics)
 
-Internal telemetry API for collecting Cursor IDE usage metrics across a development team. Cursor Hooks fire automatically after each agent milestone and POST token, model, cost, and timing data to the API — no manual instrumentation needed.
+**v1.0.0** — Telemetry API + dashboard for collecting Cursor IDE usage metrics across a development team. Cursor Hooks fire automatically after each agent milestone and POST token, model, cost, and timing data to the API — no manual instrumentation needed.
+
+> **Companion to the [Spec-First Framework](https://github.com/zlatkomq/spec-first-framework).** The framework's `/flow` workflow emits `/command` and skill names that this dashboard groups and visualises, so you can see which steps consume what tokens and where projects spend time.
+
+**Repo:** [`github.com/zlatkomq/cursor_reporting`](https://github.com/zlatkomq/cursor_reporting) · **License:** MIT
 
 ## Architecture
 
@@ -40,8 +44,8 @@ The fastest way to run the full stack locally. Requires [Docker](https://docs.do
 ### 1. Clone and configure
 
 ```bash
-git clone git@gitlab.qagency.io:ai/cursor-report.git
-cd cursor-report
+git clone https://github.com/zlatkomq/cursor_reporting.git
+cd cursor_reporting
 cp .env.example .env
 ```
 
@@ -224,6 +228,62 @@ curl -X POST http://localhost:8000/api/v1/ingest \
 
 ---
 
+## Verification — what success looks like
+
+After completing Quick Start + hook installation, here's how to confirm the full data path works end-to-end:
+
+### 1. API is up
+
+```bash
+curl http://localhost:8000/
+# Expect: {"status":"ok","db":"connected"}
+```
+
+### 2. Dashboard loads
+
+Open `http://localhost:8000/dashboard` → log in → expect to land on the overview page with empty stat cards (no data yet) and four navigation tabs (Overview, Developers, Models, Commands).
+
+### 3. Hook is registered
+
+```bash
+ls ~/.cursor/hooks/send-metrics.py     # exists, executable
+cat ~/.cursor/hooks.json               # contains "stop" + "subagentStop" entries
+```
+
+### 4. Hook fires on next agent run
+
+After installing the hook, **restart Cursor**, then run any agent prompt. After it completes, look at the local log:
+
+```bash
+tail -f ~/.cursor/hooks-logs/stop-events.jsonl
+```
+
+You should see a new JSON line per completed agent run, with fields including `model`, `input_tokens`, `output_tokens`, `command_name`, and `skill_name` (if a `/command` was used).
+
+### 5. Data lands in the dashboard
+
+Refresh `http://localhost:8000/dashboard` → the stat cards now show non-zero values, the model breakdown lists what was used, and the chart populates.
+
+If steps 1–3 pass but step 4 produces no log lines, or step 4 logs but step 5 stays empty, jump to Troubleshooting.
+
+---
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `curl http://localhost:8000/` returns connection refused | API container not running | `docker compose ps` → `docker compose up -d` if `api` is down; check `docker compose logs api` |
+| API up but `/` returns `{"db":"disconnected"}` | DB not ready or wrong `DATABASE_URL` | `docker compose logs db` → wait for "ready for connections"; verify `DATABASE_URL` matches the `db` service name (Docker) or `localhost:3307` (local dev) |
+| Dashboard login returns "invalid credentials" | User not created | Run `docker compose exec api python -m cursor_metrics create-user --email ... --password ...` |
+| Dashboard shows empty stat cards forever | No hook events received OR no pricing seeded | Check `~/.cursor/hooks-logs/stop-events.jsonl` for local events; run `seed-pricing` if costs are zero |
+| `~/.cursor/hooks-logs/stop-events.jsonl` empty after agent run | Cursor wasn't restarted after `install-hook.sh`, or `hooks.json` is malformed | Restart Cursor; validate JSON with `jq . ~/.cursor/hooks.json` |
+| Hook log lines appear locally but no DB rows | Hook can't reach the API | Check `CURSOR_METRICS_URL` is set and reachable: `curl $CURSOR_METRICS_URL/api/v1/ingest -X POST -H "Content-Type: application/json" -d '{"event_type":"test"}'` |
+| `seed-pricing` runs but dashboard still shows "$0.00" | Models in events don't match models in the pricing table | Compare `SELECT DISTINCT model FROM agent_events` with `SELECT model FROM model_pricing`; add missing rows |
+| Migration error on container startup | Alembic version mismatch | `docker compose down -v` to nuke the volume, then `docker compose up --build` |
+| `pytest` fails locally but Docker tests pass | Missing dev deps or wrong Python version | Run `uv sync` to install dev extras; verify `python --version` ≥ 3.10 |
+
+---
+
 ## Admin CLI
 
 Both commands run inside the container or locally with `uv run python -m cursor_metrics`.
@@ -292,10 +352,28 @@ When the server is running, Swagger UI is available at `http://localhost:8000/do
 
 ## Changelog
 
-### 2026-05
+### v1.0.0 (2026-05)
 
 - **Fix: hook compatibility with Python 3.10** — `send-metrics.py` used `datetime.UTC` (Python 3.11+). Replaced with `timezone.utc` so the hook works on any Python 3.10+ installation.
 - Added `subagentStop` hook event and `subagent_type` field to track nested agent calls separately.
 - Added `command_name` and `skill_name` extraction from agent transcripts (parses first user message for `/command` syntax).
 - Added `/api/v1/metrics/by-command` endpoint and dashboard page.
+- Dashboard redesign: two-tab layout (Overview / Developers) with workflow funnel chart.
 - Docker Compose: Alembic migrations now run automatically on container startup via `entrypoint.sh`.
+
+---
+
+## Compatibility
+
+| Component | Version |
+|---|---|
+| Cursor Reporting | v1.0.0 |
+| [Spec-First Framework](https://github.com/zlatkomq/spec-first-framework) | v1.2.0+ — emits `/command` and skill names this dashboard groups |
+| Python | 3.10+ |
+| Docker / Docker Compose | any current version |
+
+---
+
+## License
+
+[MIT](LICENSE).
