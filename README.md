@@ -2,7 +2,7 @@
 
 **v1.0.0** — Telemetry API + dashboard for collecting Cursor IDE usage metrics across a development team. Cursor Hooks fire automatically after each agent milestone and POST token, model, cost, and timing data to the API — no manual instrumentation needed.
 
-> **Companion to the [Spec-First Framework](https://github.com/zlatkomq/spec-first-framework).** The framework's `/flow` workflow emits `/command` and skill names that this dashboard groups and visualises, so you can see which steps consume what tokens and where projects spend time.
+> **Companion to the [Spec-First Framework](https://gitlab.qagency.io/ai/q-ai-agents/spec-first-framework).** The framework's `/flow` workflow emits `/command` and skill names that this dashboard groups and visualises, so you can see which steps consume what tokens and where projects spend time.
 
 **Repo:** [`gitlab.qagency.io/ai/cursor-report`](https://gitlab.qagency.io/ai/cursor-report) · **License:** MIT
 
@@ -374,7 +374,7 @@ When the server is running, Swagger UI is available at `http://localhost:8000/do
 | Component | Version |
 |---|---|
 | Cursor Reporting | v1.0.0 |
-| [Spec-First Framework](https://github.com/zlatkomq/spec-first-framework) | v1.2.0+ — emits `/command` and skill names this dashboard groups |
+| [Spec-First Framework](https://gitlab.qagency.io/ai/q-ai-agents/spec-first-framework) | v1.2.0+ — emits `/command` and skill names this dashboard groups |
 | Python | 3.10+ |
 | Docker / Docker Compose | any current version |
 
