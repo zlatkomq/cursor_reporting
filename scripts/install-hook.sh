@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Install the cursor-metrics Cursor hook for the current user.
+# Install the Cursor Reporting hook for the current user.
 #
 # Usage:
 #   ./scripts/install-hook.sh                          # defaults to localhost:8000
@@ -14,7 +14,7 @@ CURSOR_DIR="$HOME/.cursor"
 HOOKS_DIR="$CURSOR_DIR/hooks"
 HOOKS_JSON="$CURSOR_DIR/hooks.json"
 
-echo "==> Installing cursor-metrics hook..."
+echo "==> Installing Cursor Reporting hook..."
 
 mkdir -p "$HOOKS_DIR" "$CURSOR_DIR/hooks-logs"
 
