@@ -4,7 +4,7 @@
 
 > **Companion to the [Spec-First Framework](https://github.com/zlatkomq/spec-first-framework).** The framework's `/flow` workflow emits `/command` and skill names that this dashboard groups and visualises, so you can see which steps consume what tokens and where projects spend time.
 
-**Repo:** [`github.com/zlatkomq/cursor_reporting`](https://github.com/zlatkomq/cursor_reporting) · **License:** MIT
+**Repo:** [`gitlab.qagency.io/ai/cursor-report`](https://gitlab.qagency.io/ai/cursor-report) · **License:** MIT
 
 ## Architecture
 
@@ -44,8 +44,8 @@ The fastest way to run the full stack locally. Requires [Docker](https://docs.do
 ### 1. Clone and configure
 
 ```bash
-git clone https://github.com/zlatkomq/cursor_reporting.git
-cd cursor_reporting
+git clone git@gitlab.qagency.io:ai/cursor-report.git
+cd cursor-report
 cp .env.example .env
 ```
 
@@ -313,6 +313,12 @@ docker compose exec api python -m cursor_metrics seed-pricing
 # Local
 uv run python -m cursor_metrics seed-pricing
 ```
+
+---
+
+## CI/CD (GitLab)
+
+Pushes to `development` and `master` run the pipeline in [`.gitlab-ci.yml`](.gitlab-ci.yml): build the app image from [`.aws/Dockerfile`](.aws/Dockerfile), push to AWS ECR, and deploy per environment (`dev` / `prod`). Requires the shared `devops/ci-cd` include and runner tags configured on this project.
 
 ---
 
